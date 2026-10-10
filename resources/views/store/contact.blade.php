@@ -16,6 +16,10 @@
             <span class="eyebrow">KẾT NỐI VỚI CỐC MƠ</span>
             <h2>Một lời chào<br><em>mở đầu chiếc cốc.</em></h2>
             <p>Đội ngũ nhỏ của chúng mình thường phản hồi trong một ngày làm việc.</p>
+            <a class="contact-chat-cta" href="{{ auth()->check() ? route('chat.index') : route('login') }}">
+                {{ auth()->check() ? 'Trò chuyện trực tiếp với admin' : 'Đăng nhập để trò chuyện với admin' }}
+                <span aria-hidden="true">↗</span>
+            </a>
             <div class="contact-detail"><span class="contact-icon" aria-hidden="true">↗</span><div><span>GỌI CHO CHÚNG MÌNH</span><a href="tel:{{ preg_replace('/\s+/', '', config('store.phone')) }}">{{ config('store.phone') }}</a></div></div>
             <div class="contact-detail"><span class="contact-icon" aria-hidden="true">✉</span><div><span>GỬI EMAIL</span><a href="mailto:{{ config('store.email') }}">{{ config('store.email') }}</a></div></div>
             <div class="contact-detail"><span class="contact-icon" aria-hidden="true">⌖</span><div><span>GHÉ THĂM CỬA HÀNG</span><span>{{ config('store.address') }}</span></div></div>
@@ -35,9 +39,9 @@
                 </div>
                 <div class="form-row">
                     <label>Số điện thoại <span class="optional">(không bắt buộc)</span><input type="tel" name="phone" value="{{ old('phone') }}" autocomplete="tel" maxlength="30" placeholder="09xx xxx xxx"></label>
-                    <label>Chủ đề <input type="text" name="subject" value="{{ old('subject') }}" required maxlength="180" placeholder="Bạn cần chúng mình hỗ trợ gì?"></label>
+                    <label>Chủ đề <input type="text" name="subject" value="{{ old('subject', request('subject')) }}" required maxlength="180" placeholder="Bạn cần chúng mình hỗ trợ gì?"></label>
                 </div>
-                <label>Lời nhắn <textarea name="message" rows="5" required maxlength="5000" placeholder="Chia sẻ với chúng mình nhé...">{{ old('message') }}</textarea></label>
+                <label>Lời nhắn <textarea name="message" rows="5" required maxlength="5000" placeholder="Chia sẻ với chúng mình nhé...">{{ old('message', request('message')) }}</textarea></label>
                 @if ($errors->any())
                     <div class="form-errors" role="alert">
                         <p>Vui lòng kiểm tra lại thông tin bạn vừa nhập.</p>

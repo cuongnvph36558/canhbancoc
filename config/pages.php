@@ -1,0 +1,177 @@
+<?php
+
+return [
+    'home' => [
+        'title' => 'Trang chủ',
+        'description' => 'Chỉnh sửa nội dung hiển thị trên trang chủ cửa hàng.',
+        'sections' => [
+            [
+                'title' => 'Giới thiệu chính',
+                'fields' => [
+                    'hero_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'STUDIO QUÀ TẶNG CÁ NHÂN HÓA'],
+                    'hero_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Một chiếc cốc'],
+                    'hero_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'đậm chất của bạn.'],
+                    'hero_description' => ['label' => 'Mô tả', 'type' => 'textarea', 'default' => 'Ảnh bạn thương, câu chữ bạn chọn. Tụi mình biến những điều rất riêng thành chiếc cốc khiến mỗi ngày vui hơn một chút.'],
+                    'hero_primary_button' => ['label' => 'Nút chính', 'default' => 'Khám phá bộ sưu tập'],
+                    'hero_secondary_button' => ['label' => 'Nút phụ', 'default' => 'Kể ý tưởng của bạn'],
+                    'hero_note' => ['label' => 'Dòng ghi chú', 'default' => 'Thiết kế riêng · In chỉn chu · Gói quà xinh'],
+                ],
+            ],
+            [
+                'title' => 'Ưu điểm',
+                'fields' => [
+                    'benefit_one_title' => ['label' => 'Ưu điểm 1 — tiêu đề', 'default' => 'Thiết kế theo ý bạn'],
+                    'benefit_one_description' => ['label' => 'Ưu điểm 1 — mô tả', 'default' => 'Ảnh, tên hay lời nhắn đều được'],
+                    'benefit_two_title' => ['label' => 'Ưu điểm 2 — tiêu đề', 'default' => 'Gói quà thật xinh'],
+                    'benefit_two_description' => ['label' => 'Ưu điểm 2 — mô tả', 'default' => 'Trao tận tay, gửi tận thương'],
+                    'benefit_three_title' => ['label' => 'Ưu điểm 3 — tiêu đề', 'default' => 'In sắc nét, bền màu'],
+                    'benefit_three_description' => ['label' => 'Ưu điểm 3 — mô tả', 'default' => 'Cho chiếc cốc dùng thật lâu'],
+                ],
+            ],
+            [
+                'title' => 'Sản phẩm nổi bật',
+                'fields' => [
+                    'featured_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'ĐƯỢC YÊU THÍCH NHẤT'],
+                    'featured_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Chọn một chiếc'],
+                    'featured_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'thật giống bạn.'],
+                    'featured_view_all' => ['label' => 'Liên kết xem tất cả', 'default' => 'Xem tất cả cốc'],
+                    'featured_search_placeholder' => ['label' => 'Gợi ý tìm kiếm', 'default' => 'Tìm chiếc cốc bạn thích...'],
+                    'featured_filter_all' => ['label' => 'Bộ lọc tất cả', 'default' => 'Tất cả'],
+                    'featured_filter_image' => ['label' => 'Bộ lọc cốc in hình', 'default' => 'In hình'],
+                    'featured_filter_name' => ['label' => 'Bộ lọc cốc in tên', 'default' => 'In tên'],
+                    'featured_filter_pair' => ['label' => 'Bộ lọc cốc đôi', 'default' => 'Cốc đôi'],
+                    'featured_filter_gift' => ['label' => 'Bộ lọc quà tặng', 'default' => 'Quà tặng'],
+                    'featured_empty_message' => ['label' => 'Thông báo không tìm thấy sản phẩm', 'default' => 'Chưa tìm thấy chiếc cốc phù hợp. Thử một từ khóa khác nhé!'],
+                    'featured_more_button' => ['label' => 'Nút xem thêm', 'default' => 'Khám phá thêm nhiều mẫu cốc'],
+                ],
+            ],
+            [
+                'title' => 'Danh mục',
+                'fields' => [
+                    'categories_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'CHỌN THEO TÂM TRẠNG'],
+                    'categories_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Hôm nay bạn muốn'],
+                    'categories_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'món nào?'],
+                    'category_one_label' => ['label' => 'Danh mục 1 — tên', 'default' => 'Cốc in hình'],
+                    'category_one_caption' => ['label' => 'Danh mục 1 — mô tả', 'default' => 'Giữ boss bên cạnh'],
+                    'category_two_label' => ['label' => 'Danh mục 2 — tên', 'default' => 'Cốc tên riêng'],
+                    'category_two_caption' => ['label' => 'Danh mục 2 — mô tả', 'default' => 'Đúng tên, đúng gu'],
+                    'category_three_label' => ['label' => 'Danh mục 3 — tên', 'default' => 'Cốc đôi'],
+                    'category_three_caption' => ['label' => 'Danh mục 3 — mô tả', 'default' => 'Có đôi có cặp'],
+                    'category_four_label' => ['label' => 'Danh mục 4 — tên', 'default' => 'Quà tặng'],
+                    'category_four_caption' => ['label' => 'Danh mục 4 — mô tả', 'default' => 'Gói ghém yêu thương'],
+                ],
+            ],
+            [
+                'title' => 'Thiết kế theo yêu cầu',
+                'fields' => [
+                    'custom_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'KHÔNG CÓ CHIẾC NÀO GIỐNG CHIẾC NÀO'],
+                    'custom_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Ảnh của bạn,'],
+                    'custom_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'chiếc cốc của riêng bạn.'],
+                    'custom_description' => ['label' => 'Mô tả', 'type' => 'textarea', 'default' => 'Chọn mẫu cốc, gửi hình ảnh hoặc lời nhắn yêu thích. Chúng mình sẽ cùng bạn hoàn thiện thiết kế trước khi in.'],
+                    'custom_button' => ['label' => 'Nút bắt đầu thiết kế', 'default' => 'Bắt đầu thiết kế'],
+                    'custom_image_url' => ['label' => 'Tải ảnh minh họa', 'type' => 'image', 'default' => ''],
+                    'custom_image_alt' => ['label' => 'Mô tả hình ảnh', 'default' => 'Món quà cốc sứ được chuẩn bị chỉn chu'],
+                    'custom_image_caption_first' => ['label' => 'Chữ trên ảnh — dòng 1', 'default' => 'một chiếc cốc'],
+                    'custom_image_caption_second' => ['label' => 'Chữ trên ảnh — dòng 2', 'default' => 'mang tên bạn'],
+                ],
+            ],
+            [
+                'title' => 'Lời kêu gọi cuối trang',
+                'fields' => [
+                    'closing_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'CỐC MƠ STUDIO · LÀM BẰNG CẢ SỰ DỄ THƯƠNG'],
+                    'closing_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Thêm chút xinh xắn'],
+                    'closing_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'vào ngày thường.'],
+                    'closing_button' => ['label' => 'Nút xem sản phẩm', 'default' => 'Tìm chiếc cốc dành cho bạn'],
+                ],
+            ],
+        ],
+    ],
+    'about' => [
+        'title' => 'Giới thiệu',
+        'description' => 'Chỉnh sửa nội dung hiển thị trên trang giới thiệu.',
+        'sections' => [
+            [
+                'title' => 'Lời mở đầu',
+                'fields' => [
+                    'intro_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'CÂU CHUYỆN CỐC MƠ STUDIO'],
+                    'intro_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Một chút yêu thương'],
+                    'intro_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'in lên chiếc cốc nhỏ.'],
+                    'intro_description' => ['label' => 'Mô tả', 'type' => 'textarea', 'default' => 'Cốc Mơ bắt đầu từ một ý tưởng giản dị: biến những hình ảnh, cái tên và kỷ niệm bạn yêu thành món quà có thể chạm vào mỗi ngày.'],
+                ],
+            ],
+            [
+                'title' => 'Câu chuyện thương hiệu',
+                'fields' => [
+                    'feature_image_url' => ['label' => 'Tải ảnh câu chuyện', 'type' => 'image', 'default' => ''],
+                    'feature_image_alt' => ['label' => 'Mô tả hình ảnh', 'default' => 'Chiếc cốc được chuẩn bị thành món quà đáng yêu'],
+                    'feature_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'MỖI CHIẾC CỐC MANG MỘT DẤU ẤN'],
+                    'feature_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Ý tưởng của bạn,'],
+                    'feature_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'chúng mình chăm chút.'],
+                    'feature_paragraph_one' => ['label' => 'Đoạn nội dung 1', 'type' => 'textarea', 'default' => 'Một tấm hình thân quen, cái tên dễ thương hay câu nói chỉ hai người hiểu — đôi khi những điều nhỏ xíu lại trở thành món quà đáng nhớ nhất.'],
+                    'feature_paragraph_two' => ['label' => 'Đoạn nội dung 2', 'type' => 'textarea', 'default' => 'Cốc Mơ cùng bạn chọn mẫu, sắp xếp thiết kế và hoàn thiện từng chiếc cốc theo yêu cầu. Tụi mình chăm chút cả màu in lẫn cách gói để món quà khi đến tay người thương thật trọn vẹn.'],
+                ],
+            ],
+            [
+                'title' => 'Giá trị của chúng tôi',
+                'fields' => [
+                    'values_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'ĐIỀU CỐC MƠ LUÔN GÌN GIỮ'],
+                    'values_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Gói ghém thật xinh,'],
+                    'values_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'trao gửi thật tình.'],
+                    'value_one_title' => ['label' => 'Giá trị 1 — tiêu đề', 'default' => 'Thiết kế theo câu chuyện của bạn'],
+                    'value_one_description' => ['label' => 'Giá trị 1 — mô tả', 'type' => 'textarea', 'default' => 'Mỗi hình in, tên gọi hay lời nhắn đều được chọn riêng cho người nhận.'],
+                    'value_two_title' => ['label' => 'Giá trị 2 — tiêu đề', 'default' => 'Chăm chút từng chi tiết nhỏ'],
+                    'value_two_description' => ['label' => 'Giá trị 2 — mô tả', 'type' => 'textarea', 'default' => 'Tụi mình cùng bạn xem lại bố cục để chiếc cốc xinh từ mọi góc nhìn.'],
+                    'value_three_title' => ['label' => 'Giá trị 3 — tiêu đề', 'default' => 'Gói quà bằng cả sự dễ thương'],
+                    'value_three_description' => ['label' => 'Giá trị 3 — mô tả', 'type' => 'textarea', 'default' => 'Mỗi đơn hàng được chuẩn bị chỉn chu, sẵn sàng trao gửi yêu thương.'],
+                ],
+            ],
+            [
+                'title' => 'Lời kết',
+                'fields' => [
+                    'closing_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'CỐC MƠ STUDIO · MADE JUST FOR YOU'],
+                    'closing_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Chọn một chiếc cốc,'],
+                    'closing_title_second' => ['label' => 'Tiêu đề nhấn mạnh', 'default' => 'gửi một niềm vui thật riêng.'],
+                    'closing_button' => ['label' => 'Nút xem sản phẩm', 'default' => 'Chọn mẫu cốc'],
+                ],
+            ],
+        ],
+    ],
+    'header_footer' => [
+        'title' => 'Header & Footer',
+        'description' => 'Chỉnh sửa thông tin chung của header và footer trên toàn bộ website.',
+        'sections' => [
+            [
+                'title' => 'Header & thương hiệu',
+                'fields' => [
+                    'announcement_text' => ['label' => 'Dòng thông báo trên đầu trang', 'default' => 'Gửi chút xinh xắn đến bạn — miễn phí gói quà cho đơn từ 300.000đ'],
+                    'logo_image_url' => ['label' => 'Logo cửa hàng', 'type' => 'image', 'default' => ''],
+                    'brand_name' => ['label' => 'Tên thương hiệu', 'default' => 'Cốc Xinh'],
+                    'nav_home_label' => ['label' => 'Menu — Trang chủ', 'default' => 'Trang chủ'],
+                    'nav_products_label' => ['label' => 'Menu — Sản phẩm', 'default' => 'Sản phẩm'],
+                    'nav_cart_label' => ['label' => 'Menu — Giỏ hàng', 'default' => 'Giỏ hàng'],
+                    'nav_custom_label' => ['label' => 'Menu — Tự custom', 'default' => 'Tự custom'],
+                    'nav_about_label' => ['label' => 'Menu — Giới thiệu', 'default' => 'Giới thiệu'],
+                    'nav_contact_label' => ['label' => 'Menu — Liên hệ', 'default' => 'Liên hệ'],
+                    'nav_login_label' => ['label' => 'Nút đăng nhập', 'default' => 'Đăng nhập'],
+                    'nav_register_label' => ['label' => 'Nút đăng ký', 'default' => 'Đăng ký'],
+                ],
+            ],
+            [
+                'title' => 'Footer',
+                'fields' => [
+                    'footer_description' => ['label' => 'Mô tả footer', 'type' => 'textarea', 'default' => 'Thêm ảnh, thêm tên, thêm một chút yêu thương vào chiếc cốc của riêng bạn.'],
+                    'footer_explore_title' => ['label' => 'Tiêu đề Khám phá', 'default' => 'Khám phá'],
+                    'footer_products_label' => ['label' => 'Footer — Tất cả sản phẩm', 'default' => 'Tất cả sản phẩm'],
+                    'footer_story_label' => ['label' => 'Footer — Câu chuyện thương hiệu', 'default' => 'Câu chuyện Cốc Xinh'],
+                    'footer_visit_label' => ['label' => 'Footer — Ghé thăm chúng tôi', 'default' => 'Ghé thăm chúng tôi'],
+                    'footer_connect_title' => ['label' => 'Tiêu đề Kết nối', 'default' => 'Kết nối'],
+                    'footer_email' => ['label' => 'Email', 'default' => 'hello@cocxinh.vn'],
+                    'footer_phone' => ['label' => 'Số điện thoại', 'default' => '0909 123 456'],
+                    'footer_address' => ['label' => 'Địa chỉ', 'default' => '12 Nguyễn Trãi, Quận 1, TP.HCM'],
+                    'footer_bottom_text' => ['label' => 'Dòng cuối footer', 'default' => 'Một chiếc cốc, một niềm vui.'],
+                    'footer_cta_label' => ['label' => 'Nút hỗ trợ', 'default' => 'Cần chúng mình giúp đỡ?'],
+                ],
+            ],
+        ],
+    ],
+];

@@ -87,4 +87,28 @@ return [
             'details' => ['01 cốc sứ cá nhân hóa dung tích 330 ml', 'Hộp quà và thiệp viết tay miễn phí', 'Nhắn lời chúc khi đặt hàng'],
         ],
     ],
+    'custom_cup' => [
+        'unit_price' => 89000,
+        'size' => '11oz',
+        'bulk_discount_minimum' => 5,
+        'bulk_discount_percentage' => 10,
+        'variants' => [
+            'black' => [
+                'name' => 'Quai đen – lòng đen',
+                'handle_color' => '#242322',
+                'interior_color' => '#171717',
+            ],
+            'pink' => [
+                'name' => 'Quai hồng – lòng hồng',
+                'handle_color' => '#e4a7b5',
+                'interior_color' => '#d990a1',
+            ],
+            'white' => [
+                'name' => 'Trắng tinh',
+                'handle_color' => '#fdfdfb',
+                'interior_color' => '#ecebe7',
+            ],
+        ],
+        'icons' => ['💗', '⭐', '🌸', '😻', '🐶', '🔥', '🌈', '🎂', '☕', '🚀', '😎', '🍀'],
+    ],
 ];

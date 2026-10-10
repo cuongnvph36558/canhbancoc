@@ -8,6 +8,7 @@
             <span class="eyebrow">BỘ SƯU TẬP CỐC MƠ</span>
             <h1>Một chiếc cốc<br><em>mang câu chuyện của bạn.</em></h1>
             <p>Chọn mẫu cốc, gửi hình và tên bạn yêu. Chúng mình sẽ biến ý tưởng riêng thành món quà xinh xắn mỗi ngày.</p>
+            <a class="button button-dark" href="{{ route('products.customize') }}">Tự thiết kế cốc <span aria-hidden="true">↗</span></a>
             <div class="breadcrumb"><a href="{{ route('home') }}">Trang chủ</a><span>/</span><span>Sản phẩm</span></div>
         </div>
     </section>

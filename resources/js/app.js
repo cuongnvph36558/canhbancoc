@@ -2,6 +2,21 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNavigation = document.querySelector('#main-navigation');
 
+const adminSidebarToggle = document.querySelector('.admin-sidebar-toggle');
+const adminShell = document.querySelector('.admin-shell');
+const adminSidebar = document.querySelector('#admin-sidebar');
+
+if (document.querySelector('[data-vietnam-address]')) {
+    import('./vietnam-addresses.js')
+        .then(({ initializeVietnamAddressFields }) => initializeVietnamAddressFields())
+        .catch(() => {
+            document.querySelectorAll('[data-address-error]').forEach((message) => {
+                message.textContent = 'Không tải được danh sách địa chỉ. Vui lòng tải lại trang.';
+                message.hidden = false;
+            });
+        });
+}
+
 menuToggle?.addEventListener('click', () => {
     const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
 
@@ -9,6 +24,41 @@ menuToggle?.addEventListener('click', () => {
     menuToggle.setAttribute('aria-label', isExpanded ? 'Mở menu' : 'Đóng menu');
     mainNavigation?.classList.toggle('is-open', !isExpanded);
 });
+
+if (adminShell && adminSidebarToggle) {
+    const closeAdminSidebar = () => {
+        adminShell.classList.remove('admin-sidebar-open');
+        adminSidebarToggle.setAttribute('aria-expanded', 'false');
+        adminSidebarToggle.setAttribute('aria-label', 'Mở menu quản trị');
+    };
+
+    adminSidebarToggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+
+        const isOpen = adminShell.classList.toggle('admin-sidebar-open');
+
+        adminSidebarToggle.setAttribute('aria-expanded', String(isOpen));
+        adminSidebarToggle.setAttribute('aria-label', isOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!adminShell.classList.contains('admin-sidebar-open')) {
+            return;
+        }
+
+        if (event.target instanceof Node && adminSidebar?.contains(event.target)) {
+            return;
+        }
+
+        closeAdminSidebar();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeAdminSidebar();
+        }
+    });
+}
 
 const storefront = document.querySelector('.cup-original');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -75,4 +125,1157 @@ cupFilters.forEach((filter) => {
 
         filterCups();
     });
+});
+
+document.querySelectorAll('[data-product-gallery]').forEach((gallery) => {
+    const mainImage = gallery.querySelector('[data-product-main-image]');
+    const thumbnails = [...gallery.querySelectorAll('[data-product-thumbnail]')];
+    const imageCounter = gallery.querySelector('[data-product-image-counter]');
+
+    thumbnails.forEach((thumbnail, index) => {
+        thumbnail.addEventListener('click', () => {
+            if (!mainImage) {
+                return;
+            }
+
+            mainImage.src = thumbnail.dataset.productImage ?? '';
+            mainImage.alt = thumbnail.dataset.productAlt ?? '';
+
+            thumbnails.forEach((item) => {
+                const isSelected = item === thumbnail;
+
+                item.classList.toggle('is-selected', isSelected);
+                item.setAttribute('aria-pressed', String(isSelected));
+            });
+
+            if (imageCounter) {
+                imageCounter.textContent = `${index + 1} / ${thumbnails.length}`;
+            }
+        });
+    });
+});
+
+const cupDesigner = document.querySelector('[data-cup-customizer]');
+
+if (cupDesigner) {
+    const preview = cupDesigner.querySelector('[data-cup-preview]');
+    const printArea = cupDesigner.querySelector('[data-print-area]');
+    const designItemsElement = cupDesigner.querySelector('[data-design-items]');
+    const designFields = cupDesigner.querySelector('[data-design-fields]');
+    const itemPlaceholder = cupDesigner.querySelector('[data-print-placeholder]');
+    const layerHint = cupDesigner.querySelector('[data-layer-hint]');
+    const styleOptions = [...cupDesigner.querySelectorAll('[data-cup-variant-option]')];
+    const selectedVariantInput = cupDesigner.querySelector('[data-selected-variant]');
+    const iconOptions = [...cupDesigner.querySelectorAll('[data-add-icon]')];
+    const addTextButton = cupDesigner.querySelector('[data-add-text]');
+    const artworkInput = cupDesigner.querySelector('[data-artwork-input]');
+    const uploadCaption = cupDesigner.querySelector('[data-upload-caption]');
+    const removeBackgroundButton = cupDesigner.querySelector('[data-remove-background]');
+    const restoreBackgroundButton = cupDesigner.querySelector('[data-restore-background]');
+    const backgroundRemovalStatus = cupDesigner.querySelector('[data-background-removal-status]');
+    const orderForm = cupDesigner.matches('form') ? cupDesigner : cupDesigner.querySelector('form');
+    const orderSubmitButton = orderForm?.querySelector('[type="submit"]');
+    const layerEditor = cupDesigner.querySelector('[data-layer-editor]');
+    const selectedContentInput = cupDesigner.querySelector('[data-selected-content]');
+    const fontSizeControl = cupDesigner.querySelector('[data-font-size-control]');
+    const fontSizeInput = cupDesigner.querySelector('[data-selected-font-size]');
+    const fontSizeValue = cupDesigner.querySelector('[data-font-size-value]');
+    const removeLayerButton = cupDesigner.querySelector('[data-remove-layer]');
+    const quantityInput = cupDesigner.querySelector('[data-cup-quantity]');
+    const orderTotal = cupDesigner.querySelector('[data-cup-order-total]');
+    const orderUnitPrice = cupDesigner.querySelector('[data-cup-order-unit]');
+    const discountNote = cupDesigner.querySelector('[data-cup-discount-note]');
+    const designPreviewInput = cupDesigner.querySelector('[data-design-preview]');
+    const unitPrice = Number(cupDesigner.dataset.unitPrice);
+    const discountMinimum = Number(cupDesigner.dataset.discountMinimum);
+    const discountPercentage = Number(cupDesigner.dataset.discountPercentage);
+    const formatter = new Intl.NumberFormat('vi-VN');
+    const defaultItems = JSON.parse(cupDesigner.dataset.initialItems ?? '[]');
+    const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
+    let designItems = defaultItems.map((item) => ({
+        type: item.type,
+        content: String(item.content),
+        x: Number(item.x),
+        y: Number(item.y),
+        width: Number(item.width),
+        font_size: clamp(Number(item.font_size ?? 100), 50, 200),
+    }));
+    let selectedItemIndex = null;
+    let artworkObjectUrl = null;
+    let currentArtworkFile = null;
+    let originalArtworkFile = null;
+    let backgroundRemovalApplied = false;
+    let isProcessingBackgroundRemoval = false;
+    let backgroundRemovalPipelinePromise = null;
+    let isPreparingOrder = false;
+    let submitPreparedOrder = false;
+    let selectedVariant = selectedVariantInput?.value ?? 'black';
+
+    const getTextFontSize = (fontScale) => clamp(window.innerWidth * 0.017, 13, 24) * fontScale / 100;
+
+    const updateArtworkControls = () => {
+        if (artworkInput) {
+            artworkInput.disabled = isProcessingBackgroundRemoval;
+        }
+
+        if (removeBackgroundButton) {
+            removeBackgroundButton.disabled = !currentArtworkFile
+                || backgroundRemovalApplied
+                || isProcessingBackgroundRemoval;
+        }
+
+        if (restoreBackgroundButton) {
+            restoreBackgroundButton.hidden = !backgroundRemovalApplied;
+            restoreBackgroundButton.disabled = isProcessingBackgroundRemoval;
+        }
+
+        if (orderSubmitButton) {
+            orderSubmitButton.disabled = isProcessingBackgroundRemoval;
+        }
+
+        if (removeLayerButton) {
+            removeLayerButton.disabled = isProcessingBackgroundRemoval
+                && designItems[selectedItemIndex]?.type === 'image';
+        }
+
+        [...(designItemsElement?.querySelectorAll('[data-layer-remove]') ?? [])].forEach((button, index) => {
+            button.disabled = isProcessingBackgroundRemoval && designItems[index]?.type === 'image';
+        });
+    };
+
+    const setArtworkInputFile = (artwork) => {
+        const fileTransfer = new DataTransfer();
+
+        fileTransfer.items.add(artwork);
+        artworkInput.files = fileTransfer.files;
+        currentArtworkFile = artwork;
+    };
+
+    const showArtworkPreview = (artwork, caption = artwork.name) => {
+        if (artworkObjectUrl) {
+            URL.revokeObjectURL(artworkObjectUrl);
+        }
+
+        artworkObjectUrl = URL.createObjectURL(artwork);
+
+        if (uploadCaption) {
+            uploadCaption.textContent = caption;
+        }
+
+        const existingArtwork = designItems.findIndex((item) => item.type === 'image');
+
+        if (existingArtwork >= 0) {
+            designItems[existingArtwork].content = 'artwork';
+            selectedItemIndex = existingArtwork;
+            renderDesignItems();
+        } else {
+            addDesignItem('image', 'artwork', undefined, undefined, 38);
+        }
+    };
+
+    const getBackgroundRemovalPipeline = () => {
+        if (!backgroundRemovalPipelinePromise) {
+            backgroundRemovalPipelinePromise = import('@huggingface/transformers')
+                .then(({ pipeline }) => pipeline(
+                    'background-removal',
+                'xrds/isnet-general-onnx-int8',
+                    {
+                        dtype: 'q8',
+                    revision: '71eff2372ec9c8edbc6ca637ded591423d23b65a',
+                progress_callback: ({ status, progress }) => {
+                    if (!backgroundRemovalStatus) {
+                        return;
+                            }
+
+                    if (status === 'download') {
+                        backgroundRemovalStatus.textContent = 'Đang tải trước mô hình AI để tách nền nhanh hơn...';
+                    } else if (status === 'progress' && Number.isFinite(progress)) {
+                        backgroundRemovalStatus.textContent = `Đang tải mô hình AI... ${Math.round(progress)}%`;
+                    }
+                },
+                    },
+                ))
+                .catch((error) => {
+                    backgroundRemovalPipelinePromise = null;
+                    throw error;
+                });
+        }
+
+        return backgroundRemovalPipelinePromise;
+    };
+
+    const prepareBackgroundRemovalPipeline = () => {
+        if (!backgroundRemovalStatus || backgroundRemovalPipelinePromise) {
+            return;
+        }
+
+        backgroundRemovalStatus.textContent = 'Đang chuẩn bị mô hình AI để tách nền nhanh hơn...';
+
+        getBackgroundRemovalPipeline()
+            .then(() => {
+                if (!isProcessingBackgroundRemoval && !backgroundRemovalApplied) {
+                    backgroundRemovalStatus.textContent = 'Mô hình đã sẵn sàng. Bạn có thể tách nền ngay.';
+                }
+            })
+            .catch((error) => {
+                console.error('Không thể tải trước mô hình tách nền:', error);
+                backgroundRemovalStatus.textContent = 'Chưa thể tải mô hình. Bấm “Tách nền tự động” để thử lại.';
+            });
+    };
+
+    const updateDesignFields = () => {
+        if (!designFields) {
+            return;
+        }
+
+        designFields.replaceChildren();
+
+        designItems.forEach((item, index) => {
+            Object.entries(item).forEach(([key, value]) => {
+                const input = document.createElement('input');
+
+                input.type = 'hidden';
+                input.name = `design[items][${index}][${key}]`;
+                input.value = String(value);
+                designFields.append(input);
+            });
+        });
+
+        if (itemPlaceholder) {
+            itemPlaceholder.hidden = designItems.length > 0;
+        }
+
+        if (layerHint) {
+            layerHint.hidden = designItems.length === 0;
+        }
+    };
+
+    const updateSelectedLayer = () => {
+        const hasSelectedItem = selectedItemIndex !== null && designItems[selectedItemIndex] !== undefined;
+        const selectedItem = hasSelectedItem ? designItems[selectedItemIndex] : null;
+
+        if (layerEditor) {
+            layerEditor.hidden = !hasSelectedItem;
+        }
+
+        if (selectedContentInput && selectedItem) {
+            selectedContentInput.value = selectedItem.content;
+            selectedContentInput.disabled = selectedItem.type !== 'text';
+            selectedContentInput.setAttribute('aria-label', selectedItem.type === 'text' ? 'Chỉnh sửa nội dung chữ' : 'Biểu tượng hoặc ảnh đã chọn');
+        }
+
+        if (fontSizeControl && fontSizeInput && fontSizeValue) {
+            const isTextSelected = selectedItem?.type === 'text';
+
+            fontSizeControl.hidden = !isTextSelected;
+
+            if (isTextSelected) {
+                fontSizeInput.value = String(selectedItem.font_size);
+                fontSizeValue.value = `${selectedItem.font_size}%`;
+            }
+        }
+    };
+
+    const selectLayer = (index) => {
+        selectedItemIndex = index;
+        [...(designItemsElement?.children ?? [])].forEach((element, itemIndex) => {
+            element.classList.toggle('is-selected', itemIndex === selectedItemIndex);
+            element.setAttribute('aria-pressed', String(itemIndex === selectedItemIndex));
+        });
+        updateSelectedLayer();
+    };
+
+    const addResizeHandle = (element) => {
+        const handle = document.createElement('span');
+
+        handle.className = 'cup-design-resize-handle';
+        handle.setAttribute('aria-hidden', 'true');
+        element.append(handle);
+    };
+
+    const removeSelectedLayer = () => {
+        if (selectedItemIndex === null) {
+            return;
+        }
+
+        const [removedItem] = designItems.splice(selectedItemIndex, 1);
+
+        if (removedItem?.type === 'image' && artworkInput) {
+            artworkInput.value = '';
+            artworkInput.setCustomValidity('');
+            currentArtworkFile = null;
+            originalArtworkFile = null;
+            backgroundRemovalApplied = false;
+
+            if (artworkObjectUrl) {
+                URL.revokeObjectURL(artworkObjectUrl);
+                artworkObjectUrl = null;
+            }
+            if (uploadCaption) {
+                uploadCaption.textContent = 'JPG, PNG hoặc WEBP · Tối đa 5 MB';
+            }
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = '';
+            }
+            updateArtworkControls();
+        }
+
+        selectedItemIndex = designItems.length > 0 ? Math.min(selectedItemIndex, designItems.length - 1) : null;
+        renderDesignItems();
+    };
+
+    const attachPointerControls = (element, index) => {
+        element.addEventListener('pointerdown', (event) => {
+            if (event.target.closest('[data-layer-remove]')) {
+                return;
+            }
+
+            event.preventDefault();
+            selectLayer(index);
+            element.setPointerCapture(event.pointerId);
+
+            const item = designItems[index];
+            const areaRect = printArea.getBoundingClientRect();
+            const startX = event.clientX;
+            const startY = event.clientY;
+            const initialX = item.x;
+            const initialY = item.y;
+            const initialWidth = item.width;
+            const isResizing = event.target.closest('.cup-design-resize-handle') !== null;
+
+            element.classList.toggle('is-resizing', isResizing);
+
+            const moveLayer = (moveEvent) => {
+                const deltaX = ((moveEvent.clientX - startX) / areaRect.width) * 100;
+                const deltaY = ((moveEvent.clientY - startY) / areaRect.height) * 100;
+
+                if (isResizing) {
+                    item.width = Math.round(clamp(initialWidth + deltaX, 12, 80));
+                } else {
+                    item.x = Math.round(clamp(initialX + deltaX, 0, 100 - item.width));
+                    item.y = Math.round(clamp(initialY + deltaY, 0, 94));
+                }
+
+                element.style.left = `${item.x}%`;
+                element.style.top = `${item.y}%`;
+                element.style.width = `${item.width}%`;
+                updateDesignFields();
+            };
+
+            const finishMoving = () => {
+                element.classList.remove('is-resizing');
+                element.removeEventListener('pointermove', moveLayer);
+                element.removeEventListener('pointerup', finishMoving);
+                element.removeEventListener('pointercancel', finishMoving);
+            };
+
+            element.addEventListener('pointermove', moveLayer);
+            element.addEventListener('pointerup', finishMoving);
+            element.addEventListener('pointercancel', finishMoving);
+        });
+
+        element.addEventListener('click', () => selectLayer(index));
+    };
+
+    const renderDesignItems = () => {
+        if (!designItemsElement) {
+            return;
+        }
+
+        designItemsElement.replaceChildren();
+
+        designItems.forEach((item, index) => {
+            const element = document.createElement('button');
+
+            element.type = 'button';
+            element.className = `cup-design-item cup-design-item-${item.type}`;
+            element.style.left = `${item.x}%`;
+            element.style.top = `${item.y}%`;
+            element.style.width = `${item.width}%`;
+
+            if (item.type === 'text') {
+                element.style.fontSize = `${getTextFontSize(item.font_size)}px`;
+            }
+
+            element.setAttribute('aria-label', item.type === 'text' ? `Chọn chữ ${item.content}` : `Chọn thiết kế ${item.content}`);
+            element.setAttribute('aria-pressed', String(index === selectedItemIndex));
+
+            if (item.type === 'image') {
+                if (artworkObjectUrl) {
+                    const image = document.createElement('img');
+
+                    image.src = artworkObjectUrl;
+                    image.alt = '';
+                    element.append(image);
+                } else {
+                    element.textContent = 'Ảnh đã chọn';
+                }
+            } else {
+                element.textContent = item.content;
+            }
+
+            const removeButton = document.createElement('button');
+
+            removeButton.type = 'button';
+            removeButton.className = 'cup-design-item-remove';
+            removeButton.dataset.layerRemove = 'true';
+            removeButton.setAttribute('aria-label', 'Xóa nội dung này');
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                selectLayer(index);
+                removeSelectedLayer();
+            });
+            element.append(removeButton);
+            addResizeHandle(element);
+            attachPointerControls(element, index);
+            designItemsElement.append(element);
+        });
+
+        updateDesignFields();
+        updateSelectedLayer();
+    };
+
+    const addDesignItem = (type, content, x, y, width = type === 'text' ? 60 : type === 'image' ? 38 : 20) => {
+        if (designItems.length >= 20) {
+            return;
+        }
+
+        if (x === undefined || y === undefined) {
+            if (type === 'text') {
+                const textCount = designItems.filter((item) => item.type === 'text').length;
+                const textPositions = [[18, 8], [18, 77], [18, 17], [18, 58], [2, 28], [38, 28]];
+                [x, y] = textPositions[(textCount - 1) % textPositions.length];
+            } else {
+                const artworkCount = designItems.filter((item) => item.type !== 'text').length;
+                const artworkPositions = [[72, 8], [72, 68], [5, 8], [5, 68], [40, 8], [40, 68]];
+                [x, y] = artworkPositions[(artworkCount - 1) % artworkPositions.length];
+            }
+        }
+
+        designItems.push({
+            type,
+            content,
+            x: clamp(Math.round(x), 0, 100 - width),
+            y: clamp(Math.round(y), 0, 94),
+            width,
+        });
+        selectedItemIndex = designItems.length - 1;
+        renderDesignItems();
+    };
+
+    const applyVariant = (variant) => {
+        if (!preview || !selectedVariantInput) {
+            return;
+        }
+
+        selectedVariant = variant;
+        preview.dataset.cupVariant = variant;
+        selectedVariantInput.value = variant;
+        styleOptions.forEach((option) => {
+            const isSelected = option.dataset.cupVariantOption === variant;
+
+            option.classList.toggle('is-selected', isSelected);
+            option.setAttribute('aria-pressed', String(isSelected));
+        });
+    };
+
+    const renderCupPreviewSnapshot = async () => {
+        if (!preview || !designPreviewInput) {
+            return false;
+        }
+
+        const previewStage = preview.querySelector('[data-print-area]');
+
+        if (!previewStage) {
+            return false;
+        }
+
+        const stageRect = preview.getBoundingClientRect();
+
+        if (!stageRect.width || !stageRect.height) {
+            return false;
+        }
+
+        const width = 900;
+        const height = Math.round(width * stageRect.height / stageRect.width);
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if (!context) {
+            return false;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, width, height);
+
+        const scaleX = width / 800;
+        const scaleY = height / 650;
+        const style = window.getComputedStyle(previewStage);
+        const handleColor = style.getPropertyValue('--cup-handle-color').trim() || '#242322';
+        const interiorColor = style.getPropertyValue('--cup-interior-color').trim() || '#171717';
+        const mugBody = new Path2D('M223 155h398l-37 378c-4 43-29 68-72 68H334c-43 0-68-25-72-68z');
+        const mugHandle = new Path2D('M607 251h47c91 0 100 216 0 216h-56v-47h52c45 0 42-122 0-122h-43z');
+
+        context.save();
+        context.scale(scaleX, scaleY);
+        context.fillStyle = 'rgba(45, 40, 35, .12)';
+        context.beginPath();
+        context.ellipse(415, 596, 240, 28, 0, 0, Math.PI * 2);
+        context.fill();
+
+        const handleGradient = context.createLinearGradient(607, 0, 654, 0);
+        handleGradient.addColorStop(0, '#d1d1d1');
+        handleGradient.addColorStop(.42, handleColor);
+        handleGradient.addColorStop(1, '#c7c7c7');
+        context.fillStyle = handleGradient;
+        context.strokeStyle = 'rgba(80, 78, 76, .22)';
+        context.lineWidth = 3;
+        context.fill(mugHandle);
+        context.stroke(mugHandle);
+
+        const bodyGradient = context.createLinearGradient(223, 155, 621, 400);
+        bodyGradient.addColorStop(0, '#d1d1d1');
+        bodyGradient.addColorStop(.16, '#fbfbfb');
+        bodyGradient.addColorStop(.78, '#fff');
+        bodyGradient.addColorStop(1, '#d2d2d2');
+        context.fillStyle = bodyGradient;
+        context.shadowColor = 'rgba(52, 47, 41, .08)';
+        context.shadowBlur = 12;
+        context.shadowOffsetY = 15;
+        context.fill(mugBody);
+        context.shadowColor = 'transparent';
+        context.shadowBlur = 0;
+        context.shadowOffsetY = 0;
+        context.fillStyle = '#fff';
+        context.beginPath();
+        context.ellipse(422, 156, 199, 31, 0, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = interiorColor;
+        context.beginPath();
+        context.ellipse(422, 156, 185, 22, 0, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = 'rgba(255, 255, 255, .38)';
+        context.beginPath();
+        context.moveTo(272, 198);
+        context.lineTo(291, 198);
+        context.lineTo(326, 538);
+        context.lineTo(309, 538);
+        context.closePath();
+        context.fill();
+        context.restore();
+
+        const stageScaleX = width / stageRect.width;
+        const stageScaleY = height / stageRect.height;
+        const printAreaRect = previewStage.getBoundingClientRect();
+        const printAreaX = (printAreaRect.left - stageRect.left) * stageScaleX;
+        const printAreaY = (printAreaRect.top - stageRect.top) * stageScaleY;
+        const printAreaWidth = printAreaRect.width * stageScaleX;
+        const printAreaHeight = printAreaRect.height * stageScaleY;
+        const designItemsInStage = [...previewStage.querySelectorAll('.cup-design-item')];
+        const imagePromises = [];
+
+        designItemsInStage.forEach((item, index) => {
+            const itemRect = item.getBoundingClientRect();
+            const x = (itemRect.left - stageRect.left) * stageScaleX;
+            const y = (itemRect.top - stageRect.top) * stageScaleY;
+            const itemWidth = itemRect.width * stageScaleX;
+            const itemHeight = itemRect.height * stageScaleY;
+            const designItem = designItems[index];
+
+            if (designItem?.type === 'text' || designItem?.type === 'icon') {
+                const style = window.getComputedStyle(item);
+
+                context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+                context.fillStyle = style.color;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.save();
+                context.beginPath();
+                context.rect(printAreaX, printAreaY, printAreaWidth, printAreaHeight);
+                context.clip();
+                context.beginPath();
+                context.rect(x, y, itemWidth, itemHeight);
+                context.clip();
+                context.fillText(designItem.content, x + itemWidth / 2, y + itemHeight / 2, itemWidth);
+                context.restore();
+            } else if (designItem?.type === 'image' && item.querySelector('img')) {
+                const image = item.querySelector('img');
+                const imageBitmap = new Image();
+
+                imagePromises.push(new Promise((resolve) => {
+                    imageBitmap.onload = () => {
+                        const imageScale = Math.min(itemWidth / imageBitmap.width, itemHeight / imageBitmap.height);
+                        const imageWidth = imageBitmap.width * imageScale;
+                        const imageHeight = imageBitmap.height * imageScale;
+
+                        context.save();
+                        context.beginPath();
+                        context.rect(printAreaX, printAreaY, printAreaWidth, printAreaHeight);
+                        context.clip();
+                        context.drawImage(
+                            imageBitmap,
+                            x + (itemWidth - imageWidth) / 2,
+                            y + (itemHeight - imageHeight) / 2,
+                            imageWidth,
+                            imageHeight,
+                        );
+                        context.restore();
+                        resolve();
+                    };
+                    imageBitmap.onerror = () => resolve(false);
+                    imageBitmap.src = image.src;
+                }));
+            }
+        });
+
+        const imagesLoaded = await Promise.all(imagePromises);
+
+        if (imagesLoaded.includes(false)) {
+            return false;
+        }
+
+        designPreviewInput.value = canvas.toDataURL('image/png');
+
+        return true;
+    };
+
+    const updatePrice = () => {
+        const quantity = clamp(Number(quantityInput?.value) || 1, 1, 99);
+        const discount = quantity >= discountMinimum ? discountPercentage : 0;
+        const total = Math.round(unitPrice * quantity * (100 - discount) / 100);
+
+        if (orderTotal) {
+            orderTotal.textContent = `${formatter.format(total)}đ`;
+        }
+
+        if (orderUnitPrice) {
+            orderUnitPrice.textContent = `${formatter.format(unitPrice)}đ / cốc`;
+        }
+
+        if (discountNote) {
+            discountNote.textContent = discount
+                ? `Đã giảm ${discount}% cho đơn từ ${discountMinimum} cốc`
+                : `Từ ${discountMinimum} cốc giảm ${discountPercentage}%`;
+        }
+
+        if (quantityInput) {
+            quantityInput.value = String(quantity);
+        }
+    };
+
+    styleOptions.forEach((option) => {
+        option.addEventListener('click', () => applyVariant(option.dataset.cupVariantOption ?? 'black'));
+    });
+
+    iconOptions.forEach((option) => {
+        option.addEventListener('click', () => addDesignItem('icon', option.dataset.addIcon ?? ''));
+        option.addEventListener('dragstart', (event) => {
+            event.dataTransfer?.setData('application/x-cup-design', JSON.stringify({
+                type: 'icon',
+                content: option.dataset.addIcon ?? '',
+            }));
+        });
+    });
+
+    addTextButton?.addEventListener('click', () => {
+        addDesignItem('text', cupDesigner.dataset.newText ?? 'Chữ của bạn');
+        selectedContentInput?.focus();
+        selectedContentInput?.select();
+    });
+
+    addTextButton?.addEventListener('dragstart', (event) => {
+        event.dataTransfer?.setData('application/x-cup-design', JSON.stringify({
+            type: 'text',
+            content: cupDesigner.dataset.newText ?? 'Chữ của bạn',
+        }));
+    });
+
+    printArea?.addEventListener('dragover', (event) => event.preventDefault());
+    printArea?.addEventListener('drop', (event) => {
+        event.preventDefault();
+
+        const droppedDesign = event.dataTransfer?.getData('application/x-cup-design');
+
+        if (!droppedDesign) {
+            return;
+        }
+
+        const { type, content } = JSON.parse(droppedDesign);
+        const areaRect = printArea.getBoundingClientRect();
+        const width = type === 'text' ? 60 : 20;
+        const x = ((event.clientX - areaRect.left) / areaRect.width) * 100 - width / 2;
+        const y = ((event.clientY - areaRect.top) / areaRect.height) * 100 - 5;
+
+        addDesignItem(type, content, x, y, width);
+    });
+
+    artworkInput?.addEventListener('change', () => {
+        const artwork = artworkInput.files?.[0];
+
+        if (!artwork) {
+            return;
+        }
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(artwork.type) || artwork.size > 5 * 1024 * 1024) {
+            const errorMessage = 'Chọn ảnh JPG, PNG hoặc WEBP có dung lượng không quá 5 MB.';
+
+            artworkInput.setCustomValidity(errorMessage);
+            artworkInput.reportValidity();
+            artworkInput.setCustomValidity('');
+            artworkInput.value = '';
+
+            if (currentArtworkFile) {
+                setArtworkInputFile(currentArtworkFile);
+            }
+
+            updateArtworkControls();
+
+            return;
+        }
+
+        artworkInput.setCustomValidity('');
+        currentArtworkFile = artwork;
+        originalArtworkFile = artwork;
+        backgroundRemovalApplied = false;
+        showArtworkPreview(artwork);
+        updateArtworkControls();
+        prepareBackgroundRemovalPipeline();
+    });
+
+    removeBackgroundButton?.addEventListener('click', async () => {
+        const artwork = artworkInput?.files?.[0];
+
+        if (!artwork || !originalArtworkFile || isProcessingBackgroundRemoval) {
+            return;
+        }
+
+        isProcessingBackgroundRemoval = true;
+        updateArtworkControls();
+
+        if (backgroundRemovalStatus) {
+            backgroundRemovalStatus.textContent = 'Đang khởi tạo mô hình AI...';
+        }
+
+        try {
+            const removeBackground = await getBackgroundRemovalPipeline();
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = 'Đang tách nền ảnh...';
+            }
+
+            const result = await removeBackground(artwork);
+            const transparentImage = await result.toBlob('image/png');
+
+            if (transparentImage.size > 5 * 1024 * 1024) {
+                throw new Error('Ảnh PNG sau khi tách nền vượt quá giới hạn 5 MB.');
+            }
+
+            const filename = `${artwork.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
+            const processedArtwork = new File([transparentImage], filename, { type: 'image/png' });
+            setArtworkInputFile(processedArtwork);
+            backgroundRemovalApplied = true;
+            showArtworkPreview(processedArtwork, `${filename} · nền trong suốt`);
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = 'Đã tách nền. Ảnh PNG trong suốt sẽ được gửi cùng đơn hàng.';
+            }
+        } catch (error) {
+            console.error('Không thể tách nền ảnh:', error);
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = error instanceof Error && error.message.includes('vượt quá giới hạn')
+                    ? 'Ảnh sau khi tách nền vượt giới hạn 5 MB. Hãy thử ảnh có kích thước nhỏ hơn.'
+                    : 'Không thể tách nền ảnh. Ảnh gốc vẫn được giữ; hãy thử lại hoặc chọn ảnh khác.';
+            }
+        } finally {
+            isProcessingBackgroundRemoval = false;
+            updateArtworkControls();
+        }
+    });
+
+    restoreBackgroundButton?.addEventListener('click', () => {
+        if (!originalArtworkFile || !artworkInput) {
+            return;
+        }
+
+        setArtworkInputFile(originalArtworkFile);
+        backgroundRemovalApplied = false;
+        showArtworkPreview(originalArtworkFile);
+        updateArtworkControls();
+
+        if (backgroundRemovalStatus) {
+            backgroundRemovalStatus.textContent = 'Đã khôi phục ảnh gốc.';
+        }
+    });
+
+    orderForm?.addEventListener('submit', async (event) => {
+        if (isProcessingBackgroundRemoval) {
+            event.preventDefault();
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = 'Vui lòng chờ tách nền ảnh hoàn tất trước khi đặt hàng.';
+            }
+
+            return;
+        }
+
+        if (submitPreparedOrder) {
+            submitPreparedOrder = false;
+            return;
+        }
+
+        if (designPreviewInput) {
+            event.preventDefault();
+
+            if (isPreparingOrder) {
+                return;
+            }
+
+            isPreparingOrder = true;
+            const previewRendered = await renderCupPreviewSnapshot();
+            isPreparingOrder = false;
+
+            if (!previewRendered) {
+                if (backgroundRemovalStatus) {
+                    backgroundRemovalStatus.textContent = 'Không thể tạo ảnh xem trước thiết kế. Vui lòng tải lại trang và thử lại.';
+                }
+
+                return;
+            }
+
+            submitPreparedOrder = true;
+            orderForm.requestSubmit();
+        }
+    });
+
+    selectedContentInput?.addEventListener('input', () => {
+        if (selectedItemIndex === null || designItems[selectedItemIndex]?.type !== 'text') {
+            return;
+        }
+
+        designItems[selectedItemIndex].content = selectedContentInput.value.slice(0, 80);
+        const selectedElement = designItemsElement?.children[selectedItemIndex];
+
+        if (selectedElement) {
+            selectedElement.firstChild.textContent = designItems[selectedItemIndex].content;
+            selectedElement.setAttribute('aria-label', `Chọn chữ ${designItems[selectedItemIndex].content}`);
+        }
+
+        updateDesignFields();
+    });
+
+    fontSizeInput?.addEventListener('input', () => {
+        if (selectedItemIndex === null || designItems[selectedItemIndex]?.type !== 'text') {
+            return;
+        }
+
+        const item = designItems[selectedItemIndex];
+        const selectedElement = designItemsElement?.children[selectedItemIndex];
+
+        item.font_size = Number(fontSizeInput.value);
+
+        if (selectedElement) {
+            selectedElement.style.fontSize = `${getTextFontSize(item.font_size)}px`;
+        }
+
+        if (fontSizeValue) {
+            fontSizeValue.value = `${item.font_size}%`;
+        }
+
+        updateDesignFields();
+    });
+
+    window.addEventListener('resize', () => {
+        designItems.forEach((item, index) => {
+            const element = designItemsElement?.children[index];
+
+            if (item.type === 'text' && element) {
+                element.style.fontSize = `${getTextFontSize(item.font_size)}px`;
+            }
+        });
+    });
+
+    removeLayerButton?.addEventListener('click', removeSelectedLayer);
+
+    quantityInput?.addEventListener('input', updatePrice);
+    quantityInput?.addEventListener('change', updatePrice);
+    applyVariant(selectedVariant);
+    renderDesignItems();
+    updatePrice();
+}
+
+const cartCountStorageKey = 'storefront-cart-count';
+const cartCountElements = document.querySelectorAll('[data-live-cart-count]');
+const updateCartBadge = (count) => {
+    cartCountElements.forEach((element) => {
+        element.textContent = String(count);
+    });
+};
+
+let realtimeNoticeContainer;
+const showRealtimeNotice = (title, message, url, kind) => {
+    if (!realtimeNoticeContainer) {
+        realtimeNoticeContainer = document.createElement('div');
+        realtimeNoticeContainer.className = 'realtime-notice-stack';
+        realtimeNoticeContainer.dataset.realtimeNotices = '';
+        realtimeNoticeContainer.setAttribute('aria-live', 'polite');
+        realtimeNoticeContainer.setAttribute('aria-relevant', 'additions');
+        document.body.append(realtimeNoticeContainer);
+    }
+
+    const notice = document.createElement('article');
+    notice.className = `realtime-notice realtime-notice--${kind}`;
+    notice.setAttribute('role', 'status');
+
+    const content = document.createElement('div');
+    content.className = 'realtime-notice__content';
+
+    const heading = document.createElement('strong');
+    heading.textContent = title;
+
+    const description = document.createElement('span');
+    description.textContent = message;
+    content.append(heading, description);
+
+    if (url) {
+        const link = document.createElement('a');
+        link.className = 'realtime-notice__link';
+        link.href = url;
+        link.setAttribute('aria-label', `${title}: ${message}`);
+        link.append(content);
+        notice.append(link);
+    } else {
+        notice.append(content);
+    }
+
+    const dismissButton = document.createElement('button');
+    dismissButton.className = 'realtime-notice__dismiss';
+    dismissButton.type = 'button';
+    dismissButton.setAttribute('aria-label', 'Đóng thông báo');
+    dismissButton.textContent = '×';
+    dismissButton.addEventListener('click', () => notice.remove());
+    notice.append(dismissButton);
+    realtimeNoticeContainer.append(notice);
+
+    window.setTimeout(() => notice.remove(), 8000);
+};
+
+const currentRealtimeRole = document.body.dataset.realtimeRole ?? 'guest';
+const currentRealtimeUserId = Number(document.body.dataset.realtimeUserId);
+const seenSupportMessageIds = new Set();
+const handleSupportMessage = (message) => {
+    if (
+        !message
+        || !Number.isInteger(message.id)
+        || !Number.isInteger(message.conversation_id)
+        || typeof message.body !== 'string'
+    ) {
+        console.error('Dữ liệu tin nhắn realtime không hợp lệ:', message);
+        return;
+    }
+
+    if (seenSupportMessageIds.has(message.id)) {
+        return;
+    }
+
+    seenSupportMessageIds.add(message.id);
+    let isConversationOpen = false;
+
+    document.querySelectorAll('[data-support-chat]').forEach((chat) => {
+        if (Number(chat.dataset.supportConversationId) !== message.conversation_id) {
+            return;
+        }
+
+        isConversationOpen = true;
+        chat.dispatchEvent(new CustomEvent('support-message-created', { detail: message }));
+    });
+
+    if (Number(message.sender_id) === currentRealtimeUserId || isConversationOpen) {
+        return;
+    }
+
+    const title = currentRealtimeRole === 'admin'
+        ? `Tin nhắn mới từ ${message.customer_name}`
+        : 'Cốc Mơ đã phản hồi tin nhắn';
+
+    showRealtimeNotice(title, message.body.slice(0, 120), message.url, 'message');
+};
+
+const realtimeConfigured = Boolean(
+    import.meta.env.VITE_REVERB_APP_KEY
+    && import.meta.env.VITE_REVERB_HOST
+);
+
+if (realtimeConfigured) {
+    import('./echo')
+        .then(() => {
+            const echo = window.Echo;
+
+            if (!echo) {
+                throw new Error('Laravel Echo chưa được khởi tạo.');
+            }
+
+            if (cupProducts.length > 0) {
+                echo.channel('storefront')
+                    .listen('.product.updated', () => {
+                        window.location.reload();
+                    });
+            }
+
+            if (currentRealtimeRole === 'admin') {
+                echo.private('admins')
+                    .listen('.order.created', (order) => {
+                        if (
+                            !order
+                            || typeof order.number !== 'string'
+                            || typeof order.customer_name !== 'string'
+                            || typeof order.url !== 'string'
+                        ) {
+                            console.error('Dữ liệu đơn hàng realtime không hợp lệ:', order);
+                            return;
+                        }
+
+                        const orderType = order.type === 'custom' ? 'Đơn cốc custom' : 'Đơn hàng';
+                        const total = new Intl.NumberFormat('vi-VN').format(order.total_amount);
+                        showRealtimeNotice(
+                            `${orderType} mới #${order.number}`,
+                            `${order.customer_name} · ${total}đ`,
+                            order.url,
+                            'order'
+                        );
+                    })
+                    .listen('.support.message.created', handleSupportMessage);
+            } else if (currentRealtimeRole === 'client' && Number.isInteger(currentRealtimeUserId)) {
+                echo.private(`App.Models.User.${currentRealtimeUserId}`)
+                    .listen('.support.message.created', handleSupportMessage);
+            }
+
+            document.querySelectorAll('[data-support-chat]').forEach((chat) => {
+                const conversationId = Number(chat.dataset.supportConversationId);
+
+                if (Number.isInteger(conversationId) && conversationId > 0) {
+                    echo.private(`support-conversation.${conversationId}`)
+                        .listen('.support.message.created', handleSupportMessage);
+                }
+            });
+        })
+        .catch((error) => {
+            console.error('Không thể khởi tạo cập nhật realtime:', error);
+        });
+}
+
+if (cartCountElements.length > 0) {
+    const cartCount = Math.max(0, Number(document.body.dataset.cartCount ?? 0));
+
+    updateCartBadge(cartCount);
+    window.localStorage.setItem(cartCountStorageKey, String(cartCount));
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === cartCountStorageKey && event.newValue !== null) {
+            const nextCount = Number(event.newValue);
+
+            if (Number.isFinite(nextCount) && nextCount >= 0) {
+                updateCartBadge(nextCount);
+            }
+        }
+    });
+}
+
+document.querySelectorAll('[data-support-chat]').forEach((chat) => {
+    const transcript = chat.querySelector('[data-chat-messages]');
+    const status = chat.querySelector('[data-chat-status]');
+    const pollUrl = chat.dataset.pollUrl;
+    const currentUserId = Number(chat.dataset.currentUserId);
+    let lastMessageId = Number(chat.dataset.lastMessageId ?? 0);
+
+    if (!transcript || !status || !pollUrl) {
+        return;
+    }
+
+    transcript.scrollTop = transcript.scrollHeight;
+
+    const appendMessage = (message) => {
+        transcript.querySelector('[data-chat-empty]')?.remove();
+
+        const article = document.createElement('article');
+        article.className = 'chat-message';
+        article.dataset.chatMessageId = String(message.id);
+
+        if (Number(message.sender_id) === currentUserId) {
+            article.classList.add('is-own');
+        }
+
+        const sender = document.createElement('span');
+        sender.className = 'chat-message-sender';
+        sender.textContent = Number(message.sender_id) === currentUserId
+            ? 'Bạn'
+            : (message.sender_role === 'admin'
+                ? (chat.dataset.viewerRole === 'admin' ? 'Admin' : 'Cốc Mơ')
+                : (chat.dataset.contactName ?? 'Khách hàng'));
+
+        const body = document.createElement('p');
+        body.textContent = message.body;
+
+        const time = document.createElement('time');
+        time.textContent = message.time;
+
+        article.append(sender, body, time);
+        transcript.append(article);
+        transcript.scrollTop = transcript.scrollHeight;
+    };
+
+    chat.addEventListener('support-message-created', (event) => {
+        const message = event.detail;
+
+        if (message.id > lastMessageId) {
+            appendMessage(message);
+            lastMessageId = message.id;
+        }
+    });
+
+    const poll = async () => {
+        try {
+            const url = new URL(pollUrl, window.location.origin);
+            url.searchParams.set('after', String(lastMessageId));
+
+            const response = await fetch(url, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error(`Máy chủ trả về mã ${response.status}.`);
+            }
+
+            const payload = await response.json();
+
+            if (!Array.isArray(payload.messages)) {
+                throw new Error('Dữ liệu tin nhắn không hợp lệ.');
+            }
+
+            payload.messages.forEach((message) => {
+                if (!Number.isInteger(message.id) || typeof message.body !== 'string') {
+                    throw new Error('Dữ liệu tin nhắn không hợp lệ.');
+                }
+
+                if (message.id > lastMessageId) {
+                    appendMessage(message);
+                    lastMessageId = message.id;
+                }
+            });
+
+            status.textContent = '';
+        } catch (error) {
+            status.textContent = 'Không thể cập nhật tin nhắn. Vui lòng kiểm tra kết nối và thử lại.';
+            console.error('Không thể tải tin nhắn hỗ trợ:', error);
+        } finally {
+            window.setTimeout(poll, 5000);
+        }
+    };
+
+    poll();
 });
