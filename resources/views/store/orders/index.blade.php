@@ -40,14 +40,10 @@
                                     <span class="customer-order-status">{{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}</span>
                                     <span>
                                         @if ($order->payment_status === \App\Models\Order::PAYMENT_PAID)
-                                            Đã thanh toán
-                                        @elseif ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_COD)
-                                            Thanh toán khi nhận hàng (COD)
-                                        @elseif ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR)
-                                            Chờ xác nhận chuyển khoản QR
-                                        @else
-                                            Chờ thanh toán qua VNPay
-                                        @endif
+                                                Đã thanh toán
+                                            @else
+                                                Thanh toán khi nhận hàng (COD)
+                                            @endif
                                     </span>
                                     <strong>{{ number_format((float) $order->total, 0, ',', '.') }}đ</strong>
                                 </div>

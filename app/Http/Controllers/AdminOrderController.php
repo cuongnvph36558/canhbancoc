@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\VietQrCodeGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,7 +63,7 @@ class AdminOrderController extends Controller
         ]);
     }
 
-    public function show(Order $order): View
+    public function show(Order $order, VietQrCodeGenerator $vietQrCodeGenerator): View
     {
         $editableStatuses = [
             Order::STATUS_PENDING => self::STATUS_LABELS[Order::STATUS_PENDING],
@@ -104,13 +105,16 @@ class AdminOrderController extends Controller
             'paymentMethodLabel' => match ($order->payment_method) {
                 Order::PAYMENT_METHOD_COD => 'Thanh toán khi nhận hàng (COD)',
                 Order::PAYMENT_METHOD_BANK_QR => 'Chuyển khoản ngân hàng qua QR',
-                default => 'VNPay',
+                default => 'Thanh toán khi nhận hàng (COD)',
             },
             'paymentStatusLabel' => match ($order->payment_status) {
                 Order::PAYMENT_PAID => 'Đã thanh toán',
                 Order::PAYMENT_FAILED => 'Thanh toán thất bại',
                 default => 'Chưa thanh toán',
             },
+            'bankQrImageUrl' => $order->payment_method === Order::PAYMENT_METHOD_BANK_QR
+                ? $vietQrCodeGenerator->imageUrl($order)
+                : null,
             'editableStatuses' => $editableStatuses,
         ]);
     }

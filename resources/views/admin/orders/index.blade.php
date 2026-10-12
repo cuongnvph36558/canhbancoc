@@ -94,10 +94,8 @@
                             <td>
                                 @if ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_COD)
                                     COD
-                                @elseif ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR)
-                                    QR ngân hàng
                                 @else
-                                    VNPay
+                                    COD
                                 @endif
                                 <small>
                                     @if ($order->payment_status === \App\Models\Order::PAYMENT_PAID)

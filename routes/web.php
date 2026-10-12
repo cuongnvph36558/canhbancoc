@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCustomCupOrderController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminPageContentController;
+use App\Http\Controllers\AdminProductReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportChatController;
-use App\Http\Controllers\VNPayCallbackController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/product-images/{productImage}', ProductImageController::class)
@@ -36,9 +36,6 @@ Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/gio-hang', [CartController::class, 'store'])->name('cart.store');
 Route::put('/gio-hang/{productId}', [CartController::class, 'update'])->whereNumber('productId')->name('cart.update');
 Route::delete('/gio-hang/{productId}', [CartController::class, 'destroy'])->whereNumber('productId')->name('cart.destroy');
-Route::get('/thanh-toan/vnpay/return', [VNPayCallbackController::class, 'returned'])->name('payments.vnpay.return');
-Route::post('/thanh-toan/vnpay/ipn', [VNPayCallbackController::class, 'ipn'])->name('payments.vnpay.ipn');
-
 Route::middleware('guest')->group(function () {
     Route::get('/dang-nhap', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/dang-nhap', [AuthController::class, 'login'])->name('login.store');
@@ -70,6 +67,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/tin-nhan/{supportConversation}', [SupportChatController::class, 'adminShow'])->name('admin.chat.show');
         Route::get('/admin/tin-nhan/{supportConversation}/cap-nhat', [SupportChatController::class, 'adminMessages'])->name('admin.chat.messages.index');
         Route::post('/admin/tin-nhan/{supportConversation}', [SupportChatController::class, 'adminStore'])->middleware('throttle:30,1')->name('admin.chat.messages.store');
+        Route::get('/admin/danh-gia', [AdminProductReviewController::class, 'index'])->name('admin.product-reviews.index');
+        Route::delete('/admin/danh-gia/{productReview}', [AdminProductReviewController::class, 'destroy'])->name('admin.product-reviews.destroy');
         Route::get('/admin/noi-dung/{page}', [AdminPageContentController::class, 'edit'])->name('admin.pages.edit');
         Route::put('/admin/noi-dung/{page}', [AdminPageContentController::class, 'update'])->name('admin.pages.update');
         Route::get('/admin/nguoi-dung', [AdminController::class, 'index'])->name('admin.users');

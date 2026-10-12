@@ -47,6 +47,17 @@
             </dl>
             @if (
                 $order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR
+                && $bankQrImageUrl
+            )
+                <div class="admin-payment-qr-card">
+                    <div class="admin-panel-heading"><div><h3>Mã QR chuyển khoản</h3></div></div>
+                    <img src="{{ $bankQrImageUrl }}" alt="Mã QR thanh toán ngân hàng" class="admin-payment-qr-image">
+                    <p>{{ $order->payment_bank_name ?? 'Ngân hàng' }} · {{ $order->payment_account_number }}</p>
+                    <small>Chủ tài khoản: {{ $order->payment_account_name }}</small>
+                </div>
+            @endif
+            @if (
+                $order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR
                 && $order->payment_status === \App\Models\Order::PAYMENT_PENDING
                 && ! in_array($order->order_status, [
                     \App\Models\Order::STATUS_CANCELLED,

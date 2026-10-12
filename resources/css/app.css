@@ -3048,6 +3048,38 @@ body.cup-homepage {
     margin-bottom: 26px;
 }
 
+.admin-payment-qr-card {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid rgba(23, 43, 77, .08);
+    border-radius: 16px;
+    background: #fff;
+    text-align: center;
+}
+
+.admin-payment-qr-card h3 {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.admin-payment-qr-card img {
+    width: min(220px, 100%);
+    border: 1px solid rgba(23, 43, 77, .08);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-payment-qr-card p,
+.admin-payment-qr-card small {
+    margin: 0;
+    color: #58677a;
+}
+
 .summary-card {
     display: flex;
     flex-direction: column;

@@ -46,6 +46,40 @@ class AdminOrderManagementTest extends TestCase
             ->assertSee('Thanh toán khi nhận hàng');
     }
 
+    public function test_admin_sees_bank_qr_code_on_order_details(): void
+    {
+        $this->withoutVite();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::query()->create([
+            'user_id' => $admin->id,
+            'order_number' => 'QR-DETAIL-001',
+            'customer_name' => 'Khách hàng A',
+            'customer_email' => 'qr@example.com',
+            'customer_phone' => '0901234567',
+            'shipping_province' => 'Thành phố Hà Nội',
+            'shipping_ward' => 'Phường Ba Đình',
+            'shipping_address' => '12 Phố Huế',
+            'subtotal' => 100000,
+            'shipping_fee' => 30000,
+            'total' => 130000,
+            'order_status' => Order::STATUS_PENDING,
+            'payment_status' => Order::PAYMENT_PENDING,
+            'payment_method' => Order::PAYMENT_METHOD_BANK_QR,
+            'payment_bank_code' => 'TCB',
+            'payment_bank_name' => 'Techcombank',
+            'payment_account_number' => '1900000000',
+            'payment_account_name' => 'COK MO',
+            'inventory_reserved' => true,
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Mã QR chuyển khoản')
+            ->assertSee('img.vietqr.io/image/TCB-1900000000-compact2.png', false);
+    }
+
     public function test_admin_marks_cash_on_delivery_order_paid_when_delivered(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

@@ -7,7 +7,7 @@
             <div class="shopping-heading">
                 <span class="eyebrow">CHỈ CÒN MỘT BƯỚC NHỎ</span>
                 <h1>Thông tin <em>giao hàng.</em></h1>
-                <p>Đăng nhập để chọn cách thanh toán phù hợp với bạn.</p>
+                <p>Đăng nhập để đặt hàng và thanh toán khi nhận hàng.</p>
             </div>
 
             @if ($errors->any())
@@ -54,25 +54,8 @@
                     <label for="shipping-address">Địa chỉ nhận hàng</label>
                     <textarea id="shipping-address" name="shipping_address" rows="4" autocomplete="street-address" required maxlength="500">{{ old('shipping_address', auth()->user()->shipping_address) }}</textarea>
                     @error('shipping_address') <span class="form-error">{{ $message }}</span> @enderror
-                    <fieldset class="checkout-payment-method">
-                        <legend>Phương thức thanh toán</legend>
-                        <label>
-                            <input type="radio" name="payment_method" value="vnpay" @checked(old('payment_method', 'vnpay') === 'vnpay')>
-                            Thanh toán trực tuyến qua VNPay
-                        </label>
-                        @if ($bankQrAvailable)
-                            <label>
-                                <input type="radio" name="payment_method" value="bank_qr" @checked(old('payment_method') === 'bank_qr')>
-                                Chuyển khoản ngân hàng qua QR
-                            </label>
-                        @endif
-                        <label>
-                            <input type="radio" name="payment_method" value="cod" @checked(old('payment_method') === 'cod')>
-                            Thanh toán khi nhận hàng (COD)
-                        </label>
-                        @error('payment_method') <span class="form-error">{{ $message }}</span> @enderror
-                    </fieldset>
-                    <p class="payment-note">Đơn VNPay giữ hàng trong 15 phút. Quét mã QR sẽ tự điền số tiền và mã đơn vào ứng dụng ngân hàng; cửa hàng xác nhận chuyển khoản thủ công. Với COD, bạn thanh toán khi nhận hàng.</p>
+                    <input type="hidden" name="payment_method" value="cod">
+                    <p class="payment-note">Hiện tại cửa hàng chỉ nhận thanh toán khi nhận hàng (COD). Bạn sẽ thanh toán trực tiếp cho shipper khi nhận đơn.</p>
                 </div>
 
                 <aside class="shopping-summary">

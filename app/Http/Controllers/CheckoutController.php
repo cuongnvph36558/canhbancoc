@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Events\NewOrderCreated;
 use App\Models\Order;
-use App\Models\PaymentSetting;
 use App\Models\Product;
 use App\Services\ShoppingCart;
 use App\Services\VietQrCodeGenerator;
-use App\Services\VNPayPaymentGateway;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,17 +39,14 @@ class CheckoutController extends Controller
             ];
         })->values();
 
-        $paymentSetting = PaymentSetting::query()->find(1);
-
         return view('store.checkout', [
             'items' => $items,
             'subtotal' => $items->sum('line_total'),
             'shippingFee' => $items->sum('line_total') >= 300000 ? 0 : 30000,
-            'bankQrAvailable' => $paymentSetting?->isReadyForCheckout() ?? false,
         ]);
     }
 
-    public function store(Request $request, ShoppingCart $shoppingCart, VNPayPaymentGateway $gateway): RedirectResponse
+    public function store(Request $request, ShoppingCart $shoppingCart): RedirectResponse
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:120'],
@@ -64,25 +59,12 @@ class CheckoutController extends Controller
                 'nullable',
                 'string',
                 Rule::in([
-                    Order::PAYMENT_METHOD_VNPAY,
-                    Order::PAYMENT_METHOD_BANK_QR,
                     Order::PAYMENT_METHOD_COD,
                 ]),
             ],
         ]);
 
-        $paymentMethod = $validated['payment_method'] ?? Order::PAYMENT_METHOD_VNPAY;
-        $paymentSetting = $paymentMethod === Order::PAYMENT_METHOD_BANK_QR
-            ? PaymentSetting::query()->find(1)
-            : null;
-
-        if ($paymentMethod === Order::PAYMENT_METHOD_VNPAY && ! $gateway->isConfigured()) {
-            return back()->withErrors(['payment' => 'Thanh toán VNPay chưa được cấu hình. Vui lòng liên hệ cửa hàng hoặc bổ sung thông tin kết nối VNPay.'])->withInput();
-        }
-
-        if ($paymentMethod === Order::PAYMENT_METHOD_BANK_QR && ! ($paymentSetting?->isReadyForCheckout() ?? false)) {
-            return back()->withErrors(['payment' => 'Thanh toán QR chưa được cấu hình. Vui lòng chọn phương thức khác hoặc liên hệ cửa hàng.'])->withInput();
-        }
+        $paymentMethod = $validated['payment_method'] ?? Order::PAYMENT_METHOD_COD;
 
         $cart = $request->session()->get('cart', []);
 
@@ -90,7 +72,7 @@ class CheckoutController extends Controller
             return to_route('cart.index')->withErrors(['cart' => 'Giỏ hàng của bạn hiện đang trống.']);
         }
 
-        $order = DB::transaction(function () use ($cart, $validated, $request, $shoppingCart, $paymentMethod, $paymentSetting): Order {
+        $order = DB::transaction(function () use ($cart, $validated, $request, $shoppingCart, $paymentMethod): Order {
             $products = Product::query()
                 ->whereKey(array_keys($cart))
                 ->where('is_active', true)
@@ -135,15 +117,13 @@ class CheckoutController extends Controller
                 'order_status' => Order::STATUS_PENDING,
                 'payment_status' => Order::PAYMENT_PENDING,
                 'payment_method' => $paymentMethod,
-                'payment_bank_code' => $paymentSetting?->bank_code,
-                'payment_bank_name' => $paymentSetting?->bank_name,
-                'payment_account_number' => $paymentSetting?->account_number,
-                'payment_account_name' => $paymentSetting?->account_name,
-                'payment_qr_image_path' => $paymentSetting?->qr_image_path,
+                'payment_bank_code' => null,
+                'payment_bank_name' => null,
+                'payment_account_number' => null,
+                'payment_account_name' => null,
+                'payment_qr_image_path' => null,
                 'inventory_reserved' => true,
-                'expires_at' => $paymentMethod === Order::PAYMENT_METHOD_VNPAY
-                    ? now()->addMinutes(15)
-                    : null,
+                'expires_at' => null,
             ]);
 
             foreach ($products as $product) {
@@ -175,11 +155,7 @@ class CheckoutController extends Controller
 
         $request->session()->forget('cart');
 
-        if ($paymentMethod !== Order::PAYMENT_METHOD_VNPAY) {
-            return to_route('orders.show', $order->order_number);
-        }
-
-        return redirect()->away($gateway->createPaymentUrl($order, (string) $request->ip()));
+        return to_route('orders.show', $order->order_number);
     }
 
     public function show(

@@ -37,8 +37,8 @@
                     <h1>Vui lòng <em>chuyển khoản.</em></h1>
                     <p>Đơn hàng đã được tiếp nhận. Cửa hàng sẽ xác nhận thủ công sau khi nhận được tiền.</p>
                 @else
-                    <h1>Đang xác nhận <em>thanh toán.</em></h1>
-                    <p>VNPay đang gửi kết quả thanh toán. Trạng thái đơn hàng sẽ được cập nhật tự động.</p>
+                    <h1>Đơn hàng đang <em>được xử lý.</em></h1>
+                    <p>Chúng tôi đã nhận đơn và sẽ chuẩn bị hàng cho bạn. Bạn thanh toán khi nhận hàng.</p>
                 @endif
                 <div class="order-confirmation-summary">
                     <div><span>Địa chỉ giao hàng</span><strong>{{ collect([$order->shipping_address, $order->shipping_ward, $order->shipping_province])->filter()->implode(', ') }}</strong></div>
@@ -47,10 +47,8 @@
                         <strong>
                             @if ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_COD)
                                 Thanh toán khi nhận hàng (COD)
-                            @elseif ($order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR)
-                                Chuyển khoản ngân hàng qua QR
                             @else
-                                VNPay
+                                Thanh toán khi nhận hàng (COD)
                             @endif
                         </strong>
                     </div>

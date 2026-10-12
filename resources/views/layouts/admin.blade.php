@@ -49,6 +49,11 @@
                     <span aria-hidden="true">✉</span>
                     Lời nhắn liên hệ
                 </a>
+                <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.product-reviews.*')])
+                   href="{{ route('admin.product-reviews.index') }}">
+                    <span aria-hidden="true">★</span>
+                    Đánh giá sản phẩm
+                </a>
                 <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.chat.*')])
                    href="{{ route('admin.chat.index') }}">
                     <span aria-hidden="true">◉</span>
