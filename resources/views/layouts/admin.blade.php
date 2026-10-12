@@ -7,7 +7,7 @@
     <title>@yield('title', 'Quản trị') — Cốc Mơ Admin</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="admin-panel" data-realtime-role="admin" data-realtime-user-id="{{ auth()->id() }}">
+<body class="admin-panel">
     <div class="admin-shell">
         <aside class="admin-sidebar" id="admin-sidebar">
             <a class="admin-brand" href="{{ route('admin.users') }}">
@@ -38,11 +38,6 @@
                    href="{{ route('admin.orders.index') }}">
                     <span aria-hidden="true">🧾</span>
                     Đơn hàng cốc thường
-                </a>
-                <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.payment-settings.*')])
-                   href="{{ route('admin.payment-settings.edit') }}">
-                    <span aria-hidden="true">▦</span>
-                    Thanh toán QR
                 </a>
                 <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.custom-cup-orders.*')])
                    href="{{ route('admin.custom-cup-orders.index') }}">

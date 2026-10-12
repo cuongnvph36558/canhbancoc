@@ -3,7 +3,12 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
 
+const appUrl = process.env.APP_URL ?? '';
+const basePath = appUrl ? new URL(appUrl).pathname : '/';
+const assetBase = basePath === '/' ? '/' : `${basePath.replace(/\/+$/, '')}/`;
+
 export default defineConfig({
+    base: assetBase,
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
@@ -16,6 +21,11 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        manifest: 'manifest.json',
+        outDir: 'public/build',
+        emptyOutDir: true,
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

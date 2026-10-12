@@ -16,8 +16,6 @@
 <body
     class="cup-storefront cup-original @yield('body-class')"
     data-cart-count="{{ array_sum(session('cart', [])) }}"
-    data-realtime-role="{{ auth()->user()?->isAdmin() ? 'admin' : (auth()->check() ? 'client' : 'guest') }}"
-    data-realtime-user-id="{{ auth()->id() ?? '' }}"
 >
     <div class="announcement">{{ $siteHeaderFooter['announcement_text'] }}</div>
     <header class="site-header">

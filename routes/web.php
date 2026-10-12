@@ -5,7 +5,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCustomCupOrderController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminPageContentController;
-use App\Http\Controllers\AdminPaymentSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -64,8 +63,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/tin-nhan/{supportConversation}', [SupportChatController::class, 'adminStore'])->middleware('throttle:30,1')->name('admin.chat.messages.store');
         Route::get('/admin/noi-dung/{page}', [AdminPageContentController::class, 'edit'])->name('admin.pages.edit');
         Route::put('/admin/noi-dung/{page}', [AdminPageContentController::class, 'update'])->name('admin.pages.update');
-        Route::get('/admin/thanh-toan-qr', [AdminPaymentSettingController::class, 'edit'])->name('admin.payment-settings.edit');
-        Route::put('/admin/thanh-toan-qr', [AdminPaymentSettingController::class, 'update'])->name('admin.payment-settings.update');
         Route::get('/admin/nguoi-dung', [AdminController::class, 'index'])->name('admin.users');
         Route::put('/admin/nguoi-dung/{user}/role', [AdminController::class, 'updateRole'])->name('admin.users.update-role');
         Route::post('/admin/nguoi-dung/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('admin.users.toggle-status');

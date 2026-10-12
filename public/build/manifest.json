@@ -1,0 +1,71 @@
+{
+  "_fonts-z7c1ifrc.css": {
+    "file": "assets/fonts-z7c1ifrc.css",
+    "src": "_fonts-z7c1ifrc.css"
+  },
+  "_instrument-sans-400-normal-D1W7dsQl.woff": {
+    "file": "assets/instrument-sans-400-normal-D1W7dsQl.woff",
+    "src": "_instrument-sans-400-normal-D1W7dsQl.woff"
+  },
+  "_instrument-sans-400-normal-DRC__1Mx.woff2": {
+    "file": "assets/instrument-sans-400-normal-DRC__1Mx.woff2",
+    "src": "_instrument-sans-400-normal-DRC__1Mx.woff2"
+  },
+  "_instrument-sans-500-normal-Dk9ku72i.woff2": {
+    "file": "assets/instrument-sans-500-normal-Dk9ku72i.woff2",
+    "src": "_instrument-sans-500-normal-Dk9ku72i.woff2"
+  },
+  "_instrument-sans-500-normal-Z6ESRlEs.woff": {
+    "file": "assets/instrument-sans-500-normal-Z6ESRlEs.woff",
+    "src": "_instrument-sans-500-normal-Z6ESRlEs.woff"
+  },
+  "_instrument-sans-600-normal-B7fBEWYG.woff2": {
+    "file": "assets/instrument-sans-600-normal-B7fBEWYG.woff2",
+    "src": "_instrument-sans-600-normal-B7fBEWYG.woff2"
+  },
+  "_instrument-sans-600-normal-B9e8oLYv.woff": {
+    "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
+    "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
+  },
+  "node_modules/@huggingface/transformers/dist/transformers.web.js": {
+    "file": "assets/transformers.web-XR1ZGhee.js",
+    "name": "transformers.web",
+    "src": "node_modules/@huggingface/transformers/dist/transformers.web.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "assets": [
+      "assets/ort-wasm-simd-threaded.asyncify-CxOG5pUO.wasm"
+    ]
+  },
+  "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm": {
+    "file": "assets/ort-wasm-simd-threaded.asyncify-CxOG5pUO.wasm",
+    "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-B3hylh5p.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BOKWcZc0.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/vietnam-addresses.js",
+      "node_modules/@huggingface/transformers/dist/transformers.web.js"
+    ]
+  },
+  "resources/js/vietnam-addresses.js": {
+    "file": "assets/vietnam-addresses-gXb6HGmM.js",
+    "name": "vietnam-addresses",
+    "src": "resources/js/vietnam-addresses.js",
+    "isDynamicEntry": true
+  }
+}

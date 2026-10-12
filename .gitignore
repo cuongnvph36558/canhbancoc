@@ -14,7 +14,9 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+# Vite production build is required for deployment targets that do not run npm build after checkout.
+!/public/build/
+!/public/build/**
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
