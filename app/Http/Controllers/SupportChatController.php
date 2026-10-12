@@ -144,7 +144,8 @@ class SupportChatController extends Controller
         $imagePath = null;
 
         if ($image) {
-            $imagePath = $image->store('chat-images', 'public');
+            $filename = $image->getClientOriginalName() ?? time() . '.jpg';
+            $imagePath = $image->move(public_path('chat-images'), $filename)->getFilename();
         }
 
         $message = DB::transaction(function () use ($conversation, $sender, $body, $imagePath): SupportMessage {
@@ -182,7 +183,7 @@ class SupportChatController extends Controller
         $imageUrl = null;
 
         if ($message->image_path) {
-            $imageUrl = Storage::disk('public')->url($message->image_path);
+            $imageUrl = asset('chat-images/' . $message->image_path);
         }
 
         return [

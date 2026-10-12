@@ -32,7 +32,7 @@
                     <span class="chat-message-sender">{{ $message->sender_id === $currentUserId ? 'Bạn' : ($message->sender_role === 'admin' ? 'Admin' : $conversation->user->name) }}</span>
                     @if ($message->image_path)
                         <p class="chat-message-image">
-                            <img src="{{ Storage::disk('public')->url($message->image_path) }}" alt="Hình ảnh trong tin nhắn" loading="lazy">
+                            <img src="{{ asset('chat-images/' . $message->image_path) }}" alt="Hình ảnh trong tin nhắn" loading="lazy">
                         </p>
                     @endif
                     @if ($message->body)
