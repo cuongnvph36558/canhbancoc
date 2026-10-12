@@ -5,6 +5,16 @@
     <section class="shopping-page">
         <div class="container">
             <div class="order-confirmation">
+                @if (session('success'))
+                    <p class="shopping-alert is-success" role="status">{{ session('success') }}</p>
+                @endif
+                @if ($errors->any())
+                    <div class="shopping-alert is-warning" role="alert">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
                 <span class="order-confirmation-icon" aria-hidden="true">{{ $order->payment_status === \App\Models\Order::PAYMENT_PAID ? '✓' : '♡' }}</span>
                 <span class="eyebrow">ĐƠN HÀNG {{ $order->order_number }}</span>
                 @if (in_array($order->payment_method, [\App\Models\Order::PAYMENT_METHOD_COD, \App\Models\Order::PAYMENT_METHOD_BANK_QR], true) && $order->order_status === \App\Models\Order::STATUS_CANCELLED)
@@ -62,7 +72,38 @@
                         </div>
                     @endif
                     @foreach ($order->items as $item)
-                        <div><span>{{ $item->product_name }} × {{ $item->quantity }}</span><strong>{{ number_format((float) $item->line_total, 0, ',', '.') }}đ</strong></div>
+                        <div class="order-confirmation-item">
+                            <span>{{ $item->product_name }} × {{ $item->quantity }}</span>
+                            <strong>{{ number_format((float) $item->line_total, 0, ',', '.') }}đ</strong>
+                            @if ($order->order_status === \App\Models\Order::STATUS_DELIVERED && $item->product_id)
+                                <div class="customer-product-review">
+                                    @if ($item->review)
+                                        <p class="customer-product-review-done">
+                                            Bạn đã đánh giá sản phẩm này:
+                                            <span class="product-review-stars" aria-label="{{ $item->review->rating }} trên 5 sao">{{ str_repeat('★', $item->review->rating) }}{{ str_repeat('☆', 5 - $item->review->rating) }}</span>
+                                        </p>
+                                        @if ($item->review->comment)
+                                            <p>{{ $item->review->comment }}</p>
+                                        @endif
+                                    @else
+                                        <form method="POST" action="{{ route('customer.product-reviews.store', [$order->order_number, $item->id]) }}">
+                                            @csrf
+                                            <h2>Đánh giá {{ $item->product_name }}</h2>
+                                            <label for="review-rating-{{ $item->id }}">Mức đánh giá</label>
+                                            <select id="review-rating-{{ $item->id }}" name="rating" required>
+                                                <option value="">Chọn số sao</option>
+                                                @foreach (range(5, 1) as $rating)
+                                                    <option value="{{ $rating }}" @selected(old('rating') == $rating)>{{ $rating }} sao</option>
+                                                @endforeach
+                                            </select>
+                                            <label for="review-comment-{{ $item->id }}">Chia sẻ cảm nhận (không bắt buộc)</label>
+                                            <textarea id="review-comment-{{ $item->id }}" name="comment" rows="3" maxlength="1000">{{ old('comment') }}</textarea>
+                                            <button class="shopping-primary-button" type="submit">Gửi đánh giá</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
                     @endforeach
                     <div><span>Giao hàng</span><strong>{{ (float) $order->shipping_fee === 0.0 ? 'Miễn phí' : number_format((float) $order->shipping_fee, 0, ',', '.').'đ' }}</strong></div>
                     <div class="summary-total"><span>Tổng cộng</span><strong>{{ number_format((float) $order->total, 0, ',', '.') }}đ</strong></div>

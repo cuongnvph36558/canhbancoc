@@ -33,9 +33,25 @@ class StoreController extends Controller
 
         abort_if($product === null, 404);
 
+        $productRecord = isset($product['database_product_id'])
+            ? Product::query()
+                ->with([
+                    'reviews' => fn ($query) => $query
+                        ->with('user:id,name')
+                        ->latest()
+                        ->limit(10),
+                ])
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
+                ->findOrFail($product['database_product_id'])
+            : null;
+
         return view('store.product', [
             'product' => $product,
             'relatedProducts' => $products->where('slug', '!=', $slug)->take(4),
+            'productReviews' => $productRecord?->reviews ?? collect(),
+            'reviewAverage' => $productRecord?->reviews_avg_rating,
+            'reviewCount' => $productRecord?->reviews_count ?? 0,
         ]);
     }
 

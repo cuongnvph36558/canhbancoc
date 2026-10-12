@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CustomCupOrder;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -35,9 +37,42 @@ class AdminController extends Controller
             'inactive' => User::where('is_active', false)->count(),
         ];
 
+        $standardRevenue = (float) Order::query()
+            ->where('payment_status', Order::PAYMENT_PAID)
+            ->sum('total');
+
+        $customCupRevenue = (float) CustomCupOrder::query()
+            ->whereNotIn('status', ['pending', 'cancelled'])
+            ->sum('total_amount');
+
+        $monthRevenue = (float) Order::query()
+            ->where('payment_status', Order::PAYMENT_PAID)
+            ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('total') + (float) CustomCupOrder::query()
+                ->whereNotIn('status', ['pending', 'cancelled'])
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('total_amount');
+
+        $todayRevenue = (float) Order::query()
+            ->where('payment_status', Order::PAYMENT_PAID)
+            ->whereBetween('paid_at', [now()->startOfDay(), now()->endOfDay()])
+            ->sum('total') + (float) CustomCupOrder::query()
+                ->whereNotIn('status', ['pending', 'cancelled'])
+                ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+                ->sum('total_amount');
+
+        $revenueStats = [
+            'total' => $standardRevenue + $customCupRevenue,
+            'standard' => $standardRevenue,
+            'custom' => $customCupRevenue,
+            'month' => $monthRevenue,
+            'today' => $todayRevenue,
+        ];
+
         return view('admin.users', [
             'users' => $users,
             'stats' => $stats,
+            'revenueStats' => $revenueStats,
             'search' => $validated['search'] ?? '',
         ]);
     }

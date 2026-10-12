@@ -42,6 +42,29 @@
         </div>
     </div>
 
+    <div class="admin-summary">
+        <div class="admin-stat-card">
+            <span>Doanh thu tổng</span>
+            <strong>{{ number_format($revenueStats['total'], 0, ',', '.') }}₫</strong>
+            <small>Tổng từ đơn thường và custom</small>
+        </div>
+        <div class="admin-stat-card">
+            <span>Đơn thường</span>
+            <strong>{{ number_format($revenueStats['standard'], 0, ',', '.') }}₫</strong>
+            <small>Đã thanh toán</small>
+        </div>
+        <div class="admin-stat-card">
+            <span>Đơn custom</span>
+            <strong>{{ number_format($revenueStats['custom'], 0, ',', '.') }}₫</strong>
+            <small>Đã xác nhận xử lý</small>
+        </div>
+        <div class="admin-stat-card">
+            <span>Tháng này</span>
+            <strong>{{ number_format($revenueStats['month'], 0, ',', '.') }}₫</strong>
+            <small>Hôm nay {{ number_format($revenueStats['today'], 0, ',', '.') }}₫</small>
+        </div>
+    </div>
+
     <section class="admin-users-panel" aria-labelledby="users-heading">
         <div class="admin-panel-heading">
             <div>

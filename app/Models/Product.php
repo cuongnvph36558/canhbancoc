@@ -47,4 +47,9 @@ class Product extends Model
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true)->orderBy('position');
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\CustomCupOrderController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportChatController;
 use App\Http\Controllers\VNPayCallbackController;
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/don-hang-coc-custom/{customCupOrder}', [CustomerOrderController::class, 'showCustomOrder'])->name('customer.custom-cup-orders.show');
     Route::get('/don-hang-coc-custom/{customCupOrder}/preview', [CustomerOrderController::class, 'customOrderPreview'])->name('customer.custom-cup-orders.preview');
     Route::get('/don-hang/{orderNumber}', [CheckoutController::class, 'show'])->name('orders.show');
+    Route::post('/don-hang/{orderNumber}/san-pham/{orderItem}/danh-gia', [ProductReviewController::class, 'store'])
+        ->whereNumber('orderItem')
+        ->name('customer.product-reviews.store');
     Route::get('/tin-nhan', [SupportChatController::class, 'index'])->name('chat.index');
     Route::get('/tin-nhan/cap-nhat', [SupportChatController::class, 'messages'])->name('chat.messages.index');
     Route::post('/tin-nhan', [SupportChatController::class, 'store'])->middleware('throttle:30,1')->name('chat.messages.store');

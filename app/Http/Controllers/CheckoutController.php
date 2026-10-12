@@ -190,7 +190,7 @@ class CheckoutController extends Controller
         $order = Order::query()
             ->where('order_number', $orderNumber)
             ->where('user_id', $request->user()->id)
-            ->with('items')
+            ->with('items.review')
             ->firstOrFail();
 
         return view('store.order-confirmation', [
