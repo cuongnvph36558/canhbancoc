@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\AdminContactInquiryController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminCustomCupConfigController;
 use App\Http\Controllers\AdminCustomCupOrderController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminPageContentController;
+use App\Http\Controllers\AdminProductCategoryController;
 use App\Http\Controllers\AdminProductReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
@@ -24,7 +26,8 @@ Route::get('/product-images/{productImage}', ProductImageController::class)
 
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/san-pham', [StoreController::class, 'products'])->name('products.index');
-Route::view('/coc-tu-custom', 'store.customizer')->name('products.customize');
+Route::get('/danh-muc/{slug}', [StoreController::class, 'category'])->name('products.category');
+Route::get('/coc-tu-custom', [StoreController::class, 'customizer'])->name('products.customize');
 Route::post('/dat-hang/coc-tu-custom', [CustomCupOrderController::class, 'store'])->name('custom-cup-orders.store');
 Route::get('/dat-hang/coc-tu-custom/{order}/preview', [CustomCupOrderController::class, 'preview'])->name('custom-cup-orders.preview');
 Route::get('/dat-hang/hoan-tat', [CustomCupOrderController::class, 'confirmation'])->name('custom-cup-orders.confirmation');
@@ -88,6 +91,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/don-hang-coc-tu-custom/{order}/preview', [AdminCustomCupOrderController::class, 'preview'])->name('admin.custom-cup-orders.preview');
         Route::get('/admin/don-hang-coc-tu-custom/{order}/hinh-in', [AdminCustomCupOrderController::class, 'downloadArtwork'])->name('admin.custom-cup-orders.artwork');
 
+        Route::get('/admin/coc-custom', [AdminCustomCupConfigController::class, 'edit'])->name('admin.custom-cup-config.edit');
+        Route::patch('/admin/coc-custom/thiet-lap', [AdminCustomCupConfigController::class, 'updateSettings'])->name('admin.custom-cup-config.update-settings');
+        Route::post('/admin/coc-custom/mau-coc', [AdminCustomCupConfigController::class, 'storeVariant'])->name('admin.custom-cup-config.variants.store');
+        Route::patch('/admin/coc-custom/mau-coc/{variant}', [AdminCustomCupConfigController::class, 'updateVariant'])->name('admin.custom-cup-config.variants.update');
+        Route::delete('/admin/coc-custom/mau-coc/{variant}', [AdminCustomCupConfigController::class, 'destroyVariant'])->name('admin.custom-cup-config.variants.destroy');
+        Route::post('/admin/coc-custom/bieu-tuong', [AdminCustomCupConfigController::class, 'storeIcon'])->name('admin.custom-cup-config.icons.store');
+        Route::delete('/admin/coc-custom/bieu-tuong/{icon}', [AdminCustomCupConfigController::class, 'destroyIcon'])->name('admin.custom-cup-config.icons.destroy');
+
         Route::get('/admin/san-pham', [ProductController::class, 'index'])->name('admin.products.index');
         Route::get('/admin/san-pham/tao-moi', [ProductController::class, 'create'])->name('admin.products.create');
         Route::post('/admin/san-pham', [ProductController::class, 'store'])->name('admin.products.store');
@@ -96,5 +107,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/san-pham/{product}', [ProductController::class, 'update'])->name('admin.products.update');
         Route::delete('/admin/san-pham/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
         Route::post('/admin/san-pham/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('admin.products.toggle-status');
+
+        Route::get('/admin/phan-loai', [AdminProductCategoryController::class, 'index'])->name('admin.categories.index');
+        Route::get('/admin/phan-loai/tao-moi', [AdminProductCategoryController::class, 'create'])->name('admin.categories.create');
+        Route::post('/admin/phan-loai', [AdminProductCategoryController::class, 'store'])->name('admin.categories.store');
+        Route::get('/admin/phan-loai/{category}/chinh-sua', [AdminProductCategoryController::class, 'edit'])->name('admin.categories.edit');
+        Route::put('/admin/phan-loai/{category}', [AdminProductCategoryController::class, 'update'])->name('admin.categories.update');
+        Route::post('/admin/phan-loai/{category}/toggle-status', [AdminProductCategoryController::class, 'toggleStatus'])->name('admin.categories.toggle-status');
+        Route::delete('/admin/phan-loai/{category}', [AdminProductCategoryController::class, 'destroy'])->name('admin.categories.destroy');
     });
 });

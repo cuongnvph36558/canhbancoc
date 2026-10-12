@@ -41,6 +41,18 @@
                     <label for="sku">Mã SKU <span class="admin-required">*</span></label>
                     <input type="text" id="sku" name="sku" value="{{ old('sku', $product->sku) }}" required placeholder="VD: SKU-001" pattern="[A-Z0-9\-]+">
                 </div>
+                <div class="admin-form-group">
+                    <label for="category_id">Phân loại</label>
+                    <select id="category_id" name="category_id">
+                        <option value="">-- Chọn phân loại --</option>
+                        @foreach (($categories ?? collect()) as $category)
+                            <option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>
+                                {{ $category->icon ? $category->icon.' ' : '' }}{{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small>Nếu chưa có, vào mục <em>Phân loại sản phẩm</em> để tạo trước.</small>
+                </div>
             </div>
 
             <div class="admin-form-row">

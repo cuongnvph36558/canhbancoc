@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\CustomCupConfig;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -15,7 +16,7 @@ class StoreCustomCupOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $variants = array_keys(config('store.custom_cup.variants'));
+        $variants = array_keys(app(CustomCupConfig::class)->all()['variants']);
 
         return [
             'customer_name' => ['required', 'string', 'max:120'],
@@ -44,7 +45,7 @@ class StoreCustomCupOrderRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $items = $this->input('design.items', []);
-                $allowedIcons = config('store.custom_cup.icons', []);
+                $allowedIcons = app(CustomCupConfig::class)->all()['icons'];
                 $containsArtwork = false;
 
                 if (! is_array($items)) {

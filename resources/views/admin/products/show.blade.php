@@ -127,6 +127,18 @@
                     <code class="admin-code">{{ $product->sku }}</code>
                 </div>
                 <div class="admin-info-row">
+                    <span class="admin-label">Phân loại</span>
+                    <span class="admin-value">
+                        @if ($product->category)
+                            <a href="{{ route('admin.categories.edit', $product->category) }}" class="admin-category-chip">
+                                {{ $product->category->icon ? $product->category->icon.' ' : '' }}{{ $product->category->name }}
+                            </a>
+                        @else
+                            <span style="color:#999;">Chưa phân loại</span>
+                        @endif
+                    </span>
+                </div>
+                <div class="admin-info-row">
                     <span class="admin-label">ID sản phẩm</span>
                     <code class="admin-code">#{{ $product->id }}</code>
                 </div>

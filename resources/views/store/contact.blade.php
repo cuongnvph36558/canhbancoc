@@ -1,33 +1,33 @@
 @extends('layouts.store')
 
 @section('title', 'Liên hệ')
-@section('description', 'Cần tư vấn mẫu cốc hoặc thiết kế riêng? Gửi lời nhắn cho Cốc Mơ Studio, tụi mình luôn sẵn lòng hỗ trợ.')
+@section('description', $pageContent['intro_description'])
 @section('content')
     <section class="page-intro contact-intro">
         <div class="container">
-            <span class="eyebrow">CỐC MƠ LUÔN Ở ĐÂY</span>
-            <h1>Ý tưởng của bạn,<br><em>tụi mình cùng làm.</em></h1>
-            <p>Cần tư vấn mẫu cốc, gửi hình in hay nhờ gợi ý món quà? Nhắn cho tụi mình nhé, Cốc Mơ luôn sẵn lòng lắng nghe.</p>
+            <span class="eyebrow">{{ $pageContent['intro_eyebrow'] }}</span>
+            <h1>{{ $pageContent['intro_title_first'] }}<br><em>{{ $pageContent['intro_title_second'] }}</em></h1>
+            <p>{{ $pageContent['intro_description'] }}</p>
             <div class="breadcrumb"><a href="{{ route('home') }}">Trang chủ</a><span>/</span><span>Liên hệ</span></div>
         </div>
     </section>
     <section class="container contact-section">
         <div class="contact-info">
-            <span class="eyebrow">KẾT NỐI VỚI CỐC MƠ</span>
-            <h2>Một lời chào<br><em>mở đầu chiếc cốc.</em></h2>
-            <p>Đội ngũ nhỏ của chúng mình thường phản hồi trong một ngày làm việc.</p>
+            <span class="eyebrow">{{ $pageContent['info_eyebrow'] }}</span>
+            <h2>{{ $pageContent['info_title_first'] }}<br><em>{{ $pageContent['info_title_second'] }}</em></h2>
+            <p>{{ $pageContent['info_description'] }}</p>
             <a class="contact-chat-cta" href="{{ auth()->check() ? route('chat.index') : route('login') }}">
                 {{ auth()->check() ? 'Trò chuyện trực tiếp với admin' : 'Đăng nhập để trò chuyện với admin' }}
                 <span aria-hidden="true">↗</span>
             </a>
-            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">↗</span><div><span>GỌI CHO CHÚNG MÌNH</span><a href="tel:{{ preg_replace('/\s+/', '', config('store.phone')) }}">{{ config('store.phone') }}</a></div></div>
-            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">✉</span><div><span>GỬI EMAIL</span><a href="mailto:{{ config('store.email') }}">{{ config('store.email') }}</a></div></div>
-            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">⌖</span><div><span>GHÉ THĂM CỬA HÀNG</span><span>{{ config('store.address') }}</span></div></div>
-            <div class="contact-hours"><span>GIỜ MỞ CỬA</span><p>Thứ Hai – Thứ Bảy <strong>09:00 – 20:00</strong><br>Chủ Nhật <strong>10:00 – 18:00</strong></p></div>
+            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">↗</span><div><span>{{ $pageContent['info_phone_label'] }}</span><a href="tel:{{ preg_replace('/\s+/', '', $pageContent['info_phone']) }}">{{ $pageContent['info_phone'] }}</a></div></div>
+            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">✉</span><div><span>{{ $pageContent['info_email_label'] }}</span><a href="mailto:{{ $pageContent['info_email'] }}">{{ $pageContent['info_email'] }}</a></div></div>
+            <div class="contact-detail"><span class="contact-icon" aria-hidden="true">⌖</span><div><span>{{ $pageContent['info_address_label'] }}</span><span>{{ $pageContent['info_address'] }}</span></div></div>
+            <div class="contact-hours"><span>{{ $pageContent['info_hours_label'] }}</span><p>{{ $pageContent['info_hours_weekday'] }} <strong>{{ $pageContent['info_hours_weekday_time'] }}</strong><br>{{ $pageContent['info_hours_sunday'] }} <strong>{{ $pageContent['info_hours_sunday_time'] }}</strong></p></div>
         </div>
         <div class="contact-form-wrap reveal">
-            <h2>Gửi lời nhắn cho chúng mình</h2>
-            <p>Cốc Mơ sẽ hồi âm bạn sớm nhất có thể.</p>
+            <h2>{{ $pageContent['form_title'] }}</h2>
+            <p>{{ $pageContent['form_description'] }}</p>
             @if (session('success'))
                 <div class="form-success" role="status">{{ session('success') }}</div>
             @endif

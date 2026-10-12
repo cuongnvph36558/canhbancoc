@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class SupportChatController extends Controller
@@ -144,7 +143,7 @@ class SupportChatController extends Controller
         $imagePath = null;
 
         if ($image) {
-            $filename = $image->getClientOriginalName() ?? time() . '.jpg';
+            $filename = $image->getClientOriginalName() ?? time().'.jpg';
             $imagePath = $image->move(public_path('chat-images'), $filename)->getFilename();
         }
 
@@ -183,7 +182,7 @@ class SupportChatController extends Controller
         $imageUrl = null;
 
         if ($message->image_path) {
-            $imageUrl = asset('chat-images/' . $message->image_path);
+            $imageUrl = asset('chat-images/'.$message->image_path);
         }
 
         return [

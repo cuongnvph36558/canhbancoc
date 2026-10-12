@@ -66,6 +66,7 @@
                     <tr>
                         <th>Sản phẩm</th>
                         <th>SKU</th>
+                        <th>Phân loại</th>
                         <th>Giá</th>
                         <th>Tồn kho</th>
                         <th>Trạng thái</th>
@@ -89,6 +90,15 @@
                                 </div>
                             </td>
                             <td><code>{{ $product->sku }}</code></td>
+                            <td>
+                                @if ($product->category)
+                                    <span class="admin-category-chip">
+                                        {{ $product->category->icon ? $product->category->icon.' ' : '' }}{{ $product->category->name }}
+                                    </span>
+                                @else
+                                    <span style="color:#999;">—</span>
+                                @endif
+                            </td>
                             <td>
                                 @if ($product->discount_percentage > 0)
                                     <span class="admin-price-original">{{ number_format($product->price, 0, ',', '.') }} ₫</span>
@@ -132,7 +142,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="admin-empty-state">
+                            <td colspan="7" class="admin-empty-state">
                                 {{ $search || $status ? 'Không tìm thấy sản phẩm phù hợp.' : 'Chưa có sản phẩm nào. Hãy tạo sản phẩm đầu tiên.' }}
                             </td>
                         </tr>
@@ -206,6 +216,18 @@
 .admin-discount-label {
     display: block;
     color: #c62828;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #e3f2fd;
+    color: #1565c0;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
 }

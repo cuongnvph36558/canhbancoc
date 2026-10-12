@@ -14,7 +14,7 @@
         <span class="product-view" aria-hidden="true">↗</span>
     </a>
     <div class="product-meta">
-        <span>{{ $product['category'] }}</span>
+        <a class="product-category-link" href="{{ ! empty($product['category_slug']) ? route('products.category', $product['category_slug']) : route('products.index') }}">{{ $product['category'] }}</a>
         <span class="product-pricing">
             @if (($product['discount_percentage'] ?? 0) > 0)
                 <s class="product-price-original">{{ number_format($product['price'], 0, ',', '.') }}đ</s>

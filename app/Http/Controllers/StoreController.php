@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\ContactInquiry;
 use App\Models\Product;
+use App\Services\CustomCupConfig;
 use App\Services\SitePageContent;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class StoreController extends Controller
@@ -15,6 +19,7 @@ class StoreController extends Controller
     {
         return view('store.home', [
             'products' => $this->storefrontProducts(),
+            'categories' => $this->activeCategories(),
             'pageContent' => $sitePageContent->get('home'),
         ]);
     }
@@ -23,6 +28,24 @@ class StoreController extends Controller
     {
         return view('store.products', [
             'products' => $this->storefrontProducts(),
+            'categories' => $this->activeCategories(),
+            'currentCategory' => null,
+        ]);
+    }
+
+    public function category(string $slug): View
+    {
+        $category = Category::query()
+            ->where('is_active', true)
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $products = $this->storefrontProducts(static fn (Builder $query) => $query->where('category_id', $category->id));
+
+        return view('store.products', [
+            'products' => $products,
+            'categories' => $this->activeCategories(),
+            'currentCategory' => $category,
         ]);
     }
 
@@ -46,9 +69,20 @@ class StoreController extends Controller
                 ->findOrFail($product['database_product_id'])
             : null;
 
+        $relatedSource = isset($product['category_id'])
+            ? $this->storefrontProducts(
+                static fn (Builder $query) => $query->where('category_id', $product['category_id'])
+            )
+            : $products->all();
+
+        $relatedProducts = collect($relatedSource)
+            ->where('slug', '!=', $slug)
+            ->take(4)
+            ->values();
+
         return view('store.product', [
             'product' => $product,
-            'relatedProducts' => $products->where('slug', '!=', $slug)->take(4),
+            'relatedProducts' => $relatedProducts,
             'productReviews' => $productRecord?->reviews ?? collect(),
             'reviewAverage' => $productRecord?->reviews_avg_rating,
             'reviewCount' => $productRecord?->reviews_count ?? 0,
@@ -62,9 +96,18 @@ class StoreController extends Controller
         ]);
     }
 
-    public function contact(): View
+    public function contact(SitePageContent $sitePageContent): View
     {
-        return view('store.contact');
+        return view('store.contact', [
+            'pageContent' => $sitePageContent->get('contact'),
+        ]);
+    }
+
+    public function customizer(CustomCupConfig $config): View
+    {
+        return view('store.customizer', [
+            'customCup' => $config->all(),
+        ]);
     }
 
     public function submitContact(Request $request): RedirectResponse
@@ -83,8 +126,24 @@ class StoreController extends Controller
     }
 
     /**
+     * @return Collection<int, Category>
+     */
+    private function activeCategories(): Collection
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->withCount(['products' => fn (Builder $query) => $query->where('is_active', true)])
+            ->orderBy('position')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * @param  (\Closure(Builder): void)|null  $scope
      * @return array<int, array{
      *     database_product_id?: int,
+     *     category_id?: int,
+     *     category_slug?: string,
      *     slug: string,
      *     name: string,
      *     category: string,
@@ -99,11 +158,12 @@ class StoreController extends Controller
      *     details: array<int, string>
      * }>
      */
-    private function storefrontProducts(): array
+    private function storefrontProducts(?\Closure $scope = null): array
     {
         $products = Product::query()
             ->where('is_active', true)
-            ->with(['images', 'primaryImage'])
+            ->with(['images', 'primaryImage', 'category'])
+            ->when($scope !== null, fn (Builder $query) => $scope($query))
             ->latest()
             ->get()
             ->map(function (Product $product): array {
@@ -117,9 +177,11 @@ class StoreController extends Controller
 
                 return [
                     'database_product_id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'category_slug' => $product->category?->slug,
                     'slug' => $product->slug,
                     'name' => $product->name,
-                    'category' => 'Sản phẩm',
+                    'category' => $product->category?->name ?? 'Sản phẩm',
                     'price' => $product->price,
                     'discounted_price' => $product->discountedPrice(),
                     'discount_percentage' => $product->discount_percentage,

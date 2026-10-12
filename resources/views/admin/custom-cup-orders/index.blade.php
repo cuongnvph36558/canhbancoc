@@ -87,7 +87,7 @@
                                 <strong>{{ $order->customer_name }}</strong>
                                 <small>{{ $order->customer_phone }}</small>
                             </td>
-                            <td>{{ config("store.custom_cup.variants.{$order->cup_variant}.name") }} · {{ $order->cup_size }}</td>
+                            <td>{{ $variants[$order->cup_variant]['name'] ?? $order->cup_variant }} · {{ $order->cup_size }}</td>
                             <td>{{ $order->quantity }}</td>
                             <td><strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong></td>
                             <td><span class="admin-state is-inactive">{{ $statusLabels[$order->status] ?? $order->status }}</span></td>

@@ -174,4 +174,53 @@ return [
             ],
         ],
     ],
+    'contact' => [
+        'title' => 'Trang Liên hệ',
+        'description' => 'Chỉnh sửa nội dung hiển thị trên trang liên hệ.',
+        'sections' => [
+            [
+                'title' => 'Banner & Tiêu đề',
+                'fields' => [
+                    'intro_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'CỐC MƠ LUÔN Ở ĐÂY'],
+                    'intro_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Ý tưởng của bạn,'],
+                    'intro_title_second' => ['label' => 'Tiêu đề dòng 2', 'default' => 'tụi mình cùng làm.'],
+                    'intro_description' => ['label' => 'Mô tả', 'type' => 'textarea', 'default' => 'Cần tư vấn mẫu cốc, gửi hình in hay nhờ gợi ý món quà? Nhắn cho tụi mình nhé, Cốc Mơ luôn sẵn sàng lắng nghe.'],
+                ],
+            ],
+            [
+                'title' => 'Thông tin liên hệ',
+                'fields' => [
+                    'info_eyebrow' => ['label' => 'Dòng giới thiệu nhỏ', 'default' => 'KẾT NỐI VỚI CỐC MƠ'],
+                    'info_title_first' => ['label' => 'Tiêu đề dòng 1', 'default' => 'Một lời chào'],
+                    'info_title_second' => ['label' => 'Tiêu đề dòng 2', 'default' => 'mở đầu chiếc cốc.'],
+                    'info_description' => ['label' => 'Mô tả', 'type' => 'textarea', 'default' => 'Đội ngũ nhỏ của chúng mình thường phản hồi trong một ngày làm việc.'],
+                    'info_phone_label' => ['label' => 'Nhãn điện thoại', 'default' => 'GỌI CHO CHÚNG MÌNH'],
+                    'info_phone' => ['label' => 'Số điện thoại', 'default' => '0909 123 456'],
+                    'info_email_label' => ['label' => 'Nhãn email', 'default' => 'GỬI EMAIL'],
+                    'info_email' => ['label' => 'Email', 'default' => 'hello@cocxinh.vn'],
+                    'info_address_label' => ['label' => 'Nhãn địa chỉ', 'default' => 'GHÉ THĂM CỬA HÀNG'],
+                    'info_address' => ['label' => 'Địa chỉ', 'default' => '12 Nguyễn Trãi, Quận 1, TP.HCM'],
+                    'info_hours_label' => ['label' => 'Nhãn giờ mở cửa', 'default' => 'GIỜ MỞ CỬA'],
+                    'info_hours_weekday' => ['label' => 'Giờ thứ 2 - thứ 7', 'default' => 'Thứ Hai – Thứ Bảy'],
+                    'info_hours_weekday_time' => ['label' => 'Giờ thứ 2 - thứ 7', 'default' => '09:00 – 20:00'],
+                    'info_hours_sunday' => ['label' => 'Giờ chủ nhật', 'default' => 'Chủ Nhật'],
+                    'info_hours_sunday_time' => ['label' => 'Giờ chủ nhật', 'default' => '10:00 – 18:00'],
+                ],
+            ],
+            [
+                'title' => 'Form liên hệ',
+                'fields' => [
+                    'form_title' => ['label' => 'Tiêu đề form', 'default' => 'Gửi lời nhắn cho chúng mình'],
+                    'form_description' => ['label' => 'Mô tả form', 'type' => 'textarea', 'default' => 'Cốc Mơ sẽ hồi âm bạn sớm nhất có thể.'],
+                ],
+            ],
+            [
+                'title' => 'Hình ảnh minh họa',
+                'fields' => [
+                    'info_image_url' => ['label' => 'Tải ảnh minh họa', 'type' => 'image', 'default' => ''],
+                    'info_image_alt' => ['label' => 'Mô tả hình ảnh', 'default' => 'Chiếc cốc được trang trí xinh xắn'],
+                ],
+            ],
+        ],
+    ],
 ];

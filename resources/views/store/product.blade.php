@@ -19,6 +19,10 @@
                 <a href="{{ route('home') }}">Trang chủ</a>
                 <span aria-hidden="true">/</span>
                 <a href="{{ route('products.index') }}">Sản phẩm</a>
+                @if (! empty($product['category_slug']))
+                    <span aria-hidden="true">/</span>
+                    <a href="{{ route('products.category', $product['category_slug']) }}">{{ $product['category'] }}</a>
+                @endif
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">{{ $product['name'] }}</span>
             </nav>

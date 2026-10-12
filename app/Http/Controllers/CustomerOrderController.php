@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomCupOrder;
 use App\Models\Order;
+use App\Services\CustomCupConfig;
 use App\Services\CustomCupOrderPreview;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -34,7 +35,7 @@ class CustomerOrderController extends Controller
         'cancelled' => 'Đã hủy',
     ];
 
-    public function index(Request $request): View
+    public function index(Request $request, CustomCupConfig $config): View
     {
         $user = $request->user();
         $searchQuery = $request->input('q');
@@ -76,12 +77,13 @@ class CustomerOrderController extends Controller
         return view('store.orders.index', [
             'orders' => $orders,
             'customOrders' => $customOrders,
+            'cupVariants' => $config->all()['variants'],
             'orderStatusLabels' => self::ORDER_STATUS_LABELS,
             'customOrderStatusLabels' => self::CUSTOM_ORDER_STATUS_LABELS,
         ]);
     }
 
-    public function showCustomOrder(Request $request, CustomCupOrder $customCupOrder): View
+    public function showCustomOrder(Request $request, CustomCupOrder $customCupOrder, CustomCupConfig $config): View
     {
         $customCupOrder = CustomCupOrder::query()
             ->where('user_id', $request->user()->id)
@@ -90,7 +92,7 @@ class CustomerOrderController extends Controller
 
         return view('store.orders.custom-show', [
             'order' => $customCupOrder,
-            'cupVariant' => config("store.custom_cup.variants.{$customCupOrder->cup_variant}"),
+            'cupVariant' => $config->all()['variants'][$customCupOrder->cup_variant] ?? null,
             'statusLabel' => self::CUSTOM_ORDER_STATUS_LABELS[$customCupOrder->status] ?? $customCupOrder->status,
             'previewUrl' => route('customer.custom-cup-orders.preview', $customCupOrder),
         ]);

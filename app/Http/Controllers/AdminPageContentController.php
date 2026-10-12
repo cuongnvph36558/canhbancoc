@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\SitePageContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
-use RuntimeException;
 use Throwable;
 
 class AdminPageContentController extends Controller
@@ -36,7 +35,6 @@ class AdminPageContentController extends Controller
             }
 
             $rules['content.'.$key] = ['required', 'string'];
-
             $rules['content.'.$key][] = 'max:'.($field['max'] ?? 5000);
         }
 
@@ -57,16 +55,15 @@ class AdminPageContentController extends Controller
                 continue;
             }
 
-            $path = $image->store('pages/'.$page, 'public');
+            $directory = public_path('uploads/pages/'.$page);
+            File::ensureDirectoryExists($directory);
 
-            if (! is_string($path)) {
-                $this->deleteUploadedImages($uploadedPaths);
+            $filename = $image->hashName();
+            $image->move($directory, $filename);
 
-                throw new RuntimeException('Không thể lưu ảnh trang.');
-            }
-
-            $content[$key] = $path;
-            $uploadedPaths[] = $path;
+            $url = asset('uploads/pages/'.$page.'/'.$filename);
+            $content[$key] = $url;
+            $uploadedPaths[] = $url;
         }
 
         try {
@@ -77,20 +74,7 @@ class AdminPageContentController extends Controller
             throw $exception;
         }
 
-        $replacedPaths = [];
-
-        foreach ($fields as $key => $field) {
-            if (
-                ($field['type'] ?? 'text') === 'image'
-                && isset($content[$key], $previousContent[$key])
-                && $content[$key] !== $previousContent[$key]
-                && str_starts_with($previousContent[$key], 'pages/'.$page.'/')
-            ) {
-                $replacedPaths[] = $previousContent[$key];
-            }
-        }
-
-        $this->deleteUploadedImages($replacedPaths);
+        $this->deleteUploadedImages($previousContent, $page);
 
         return to_route('admin.pages.edit', $page)
             ->with('success', 'Nội dung trang đã được cập nhật.');
@@ -99,10 +83,17 @@ class AdminPageContentController extends Controller
     /**
      * @param  array<int, string>  $paths
      */
-    private function deleteUploadedImages(array $paths): void
+    private function deleteUploadedImages(array $paths, string $page): void
     {
-        if ($paths !== [] && ! Storage::disk('public')->delete($paths)) {
-            throw new RuntimeException('Không thể xóa ảnh cũ khỏi bộ nhớ.');
+        foreach ($paths as $path) {
+            if (str_starts_with($path, 'http')) {
+                $relativePath = parse_url($path, PHP_URL_PATH);
+                $filePath = public_path(ltrim($relativePath, '/'));
+
+                if (File::exists($filePath)) {
+                    File::delete($filePath);
+                }
+            }
         }
     }
 }

@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\SitePage;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SitePageContent
 {
@@ -47,12 +45,6 @@ class SitePageContent
 
         $page = SitePage::query()->where('slug', $slug)->first();
         $content = array_replace($defaults, $page?->content ?? []);
-
-        foreach ($this->fields($slug) as $key => $field) {
-            if (($field['type'] ?? 'text') === 'image' && Str::startsWith($content[$key], 'pages/')) {
-                $content[$key] = Storage::disk('public')->url($content[$key]);
-            }
-        }
 
         return $content;
     }

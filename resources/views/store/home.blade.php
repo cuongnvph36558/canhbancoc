@@ -76,10 +76,23 @@
                 <div><span class="cup-eyebrow">{{ $pageContent['categories_eyebrow'] }}</span><h2 id="cup-category-title">{{ $pageContent['categories_title_first'] }} <em>{{ $pageContent['categories_title_second'] }}</em></h2></div>
             </div>
             <div class="cup-category-grid">
-                <a class="cup-category-card category-pink" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">🐱</span><span class="category-label">{{ $pageContent['category_one_label'] }}</span><span class="category-caption">{{ $pageContent['category_one_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
-                <a class="cup-category-card category-lilac" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">✍️</span><span class="category-label">{{ $pageContent['category_two_label'] }}</span><span class="category-caption">{{ $pageContent['category_two_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
-                <a class="cup-category-card category-peach" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">💞</span><span class="category-label">{{ $pageContent['category_three_label'] }}</span><span class="category-caption">{{ $pageContent['category_three_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
-                <a class="cup-category-card category-blue" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">🎁</span><span class="category-label">{{ $pageContent['category_four_label'] }}</span><span class="category-caption">{{ $pageContent['category_four_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
+                @forelse (($categories ?? collect()) as $index => $category)
+                    @php
+                        $cardClasses = ['cup-category-card', 'category-pink', 'category-lilac', 'category-peach', 'category-blue'];
+                        $cardClass = $cardClasses[$index % 4] ?? 'category-pink';
+                    @endphp
+                    <a class="{{ $cardClass }}" href="{{ route('products.category', $category->slug) }}">
+                        <span class="category-emoji" aria-hidden="true">{{ $category->icon ?: '✨' }}</span>
+                        <span class="category-label">{{ $category->name }}</span>
+                        <span class="category-caption">{{ $category->description ?: Str::limit('Khám phá '.strtolower($category->name).' tại Cốc Mơ.', 60) }}</span>
+                        <span class="category-arrow" aria-hidden="true">↗</span>
+                    </a>
+                @empty
+                    <a class="cup-category-card category-pink" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">🐱</span><span class="category-label">{{ $pageContent['category_one_label'] }}</span><span class="category-caption">{{ $pageContent['category_one_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
+                    <a class="cup-category-card category-lilac" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">✍️</span><span class="category-label">{{ $pageContent['category_two_label'] }}</span><span class="category-caption">{{ $pageContent['category_two_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
+                    <a class="cup-category-card category-peach" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">💞</span><span class="category-label">{{ $pageContent['category_three_label'] }}</span><span class="category-caption">{{ $pageContent['category_three_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
+                    <a class="cup-category-card category-blue" href="{{ route('products.index') }}"><span class="category-emoji" aria-hidden="true">🎁</span><span class="category-label">{{ $pageContent['category_four_label'] }}</span><span class="category-caption">{{ $pageContent['category_four_caption'] }}</span><span class="category-arrow" aria-hidden="true">↗</span></a>
+                @endforelse
             </div>
         </section>
 

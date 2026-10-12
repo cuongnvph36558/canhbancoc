@@ -5,12 +5,12 @@
 @section('body-class', 'cup-customizer-page')
 @section('content')
     @php
-        $customCup = config('store.custom_cup');
         $initialDesignItems = old('design.items', [
             ['type' => 'text', 'content' => 'Tên của bạn', 'x' => 11, 'y' => 39, 'width' => 78],
             ['type' => 'icon', 'content' => '☕', 'x' => 40, 'y' => 63, 'width' => 20],
         ]);
-        $selectedVariant = old('cup_variant', 'black');
+        $firstVariantSlug = array_key_first($customCup['variants'] ?? []) ?: 'black';
+        $selectedVariant = old('cup_variant', $firstVariantSlug);
     @endphp
 
     <section class="cup-designer-page">

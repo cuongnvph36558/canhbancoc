@@ -6,6 +6,7 @@
     <meta name="description" content="Khu vực quản trị Cốc Mơ">
     <title>@yield('title', 'Quản trị') — Cốc Mơ Admin</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 <body class="admin-panel">
     <div class="admin-shell">
@@ -34,6 +35,11 @@
                     <span aria-hidden="true">📦</span>
                     Sản phẩm & kho hàng
                 </a>
+                <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.categories.*')])
+                   href="{{ route('admin.categories.index') }}">
+                    <span aria-hidden="true">🗂</span>
+                    Phân loại sản phẩm
+                </a>
                 <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.orders.*')])
                    href="{{ route('admin.orders.index') }}">
                     <span aria-hidden="true">🧾</span>
@@ -43,6 +49,11 @@
                    href="{{ route('admin.custom-cup-orders.index') }}">
                     <span aria-hidden="true">☕</span>
                     Đơn cốc custom
+                </a>
+                <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.custom-cup-config.*')])
+                   href="{{ route('admin.custom-cup-config.edit') }}">
+                    <span aria-hidden="true">⚙</span>
+                    Cấu hình cốc custom
                 </a>
                 <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.contact-inquiries.*')])
                    href="{{ route('admin.contact-inquiries.index') }}">
@@ -92,5 +103,6 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>

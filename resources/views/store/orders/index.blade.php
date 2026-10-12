@@ -142,7 +142,7 @@
                                     <span>Mã đơn <strong>{{ $order->order_number }}</strong></span>
                                     <span>{{ $order->created_at->format('d/m/Y H:i') }}</span>
                                 </div>
-                                <h3>Cốc {{ config("store.custom_cup.variants.{$order->cup_variant}.name", $order->cup_variant) }} · {{ $order->cup_size }}</h3>
+                                <h3>Cốc {{ $cupVariants[$order->cup_variant]['name'] ?? $order->cup_variant }} · {{ $order->cup_size }}</h3>
                                 <div class="customer-order-summary">
                                     <span class="customer-order-status">{{ $customOrderStatusLabels[$order->status] ?? $order->status }}</span>
                                     <span>{{ $order->quantity }} cốc · Đang chờ cửa hàng xác nhận</span>

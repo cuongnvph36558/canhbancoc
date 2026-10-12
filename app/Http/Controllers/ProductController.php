@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\StorefrontProductUpdated;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -26,7 +27,7 @@ class ProductController extends Controller
         ]);
 
         $products = Product::query()
-            ->with(['images', 'primaryImage'])
+            ->with(['images', 'primaryImage', 'category'])
             ->when($validated['search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
@@ -58,11 +59,19 @@ class ProductController extends Controller
 
     public function create(): View
     {
-        return view('admin.products.create');
+        return view('admin.products.create', [
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('position')
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $categoryIds = Category::pluck('id')->all();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'sku' => ['required', 'string', 'max:100', 'unique:products'],
@@ -70,6 +79,7 @@ class ProductController extends Controller
             'discount_percentage' => ['sometimes', 'integer', 'min:0', 'max:100'],
             'stock' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string', 'max:500'],
+            'category_id' => ['nullable', 'integer', Rule::in($categoryIds)],
             'detailed_description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url'],
             'images' => ['nullable', 'array', 'max:10'],
@@ -119,20 +129,29 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load(['images', 'primaryImage']);
+        $product->load(['images', 'primaryImage', 'category']);
 
         return view('admin.products.show', ['product' => $product]);
     }
 
     public function edit(Product $product): View
     {
-        $product->load('images');
+        $product->load(['images', 'category']);
 
-        return view('admin.products.edit', ['product' => $product]);
+        return view('admin.products.edit', [
+            'product' => $product,
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('position')
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function update(Request $request, Product $product): RedirectResponse
     {
+        $categoryIds = Category::pluck('id')->all();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku,'.$product->id],
@@ -140,6 +159,7 @@ class ProductController extends Controller
             'discount_percentage' => ['sometimes', 'integer', 'min:0', 'max:100'],
             'stock' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string', 'max:500'],
+            'category_id' => ['nullable', 'integer', Rule::in($categoryIds)],
             'detailed_description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url'],
             'remove_legacy_image' => ['sometimes', 'boolean'],

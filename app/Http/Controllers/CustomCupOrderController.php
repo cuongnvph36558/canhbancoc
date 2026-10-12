@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\NewOrderCreated;
 use App\Http\Requests\StoreCustomCupOrderRequest;
 use App\Models\CustomCupOrder;
+use App\Services\CustomCupConfig;
 use App\Services\CustomCupOrderPreview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
@@ -18,20 +19,20 @@ use Throwable;
 
 class CustomCupOrderController extends Controller
 {
-    public function store(StoreCustomCupOrderRequest $request): RedirectResponse
+    public function store(StoreCustomCupOrderRequest $request, CustomCupConfig $config): RedirectResponse
     {
         $validated = $request->validated();
         $quantity = $validated['quantity'];
-        $unitPrice = (int) config('store.custom_cup.unit_price');
-        $bulkMinimum = (int) config('store.custom_cup.bulk_discount_minimum');
-        $discountPercentage = $quantity >= $bulkMinimum
-            ? (int) config('store.custom_cup.bulk_discount_percentage')
+        $customCup = $config->all();
+        $unitPrice = (int) $customCup['unit_price'];
+        $discountPercentage = $quantity >= (int) $customCup['bulk_discount_minimum']
+            ? (int) $customCup['bulk_discount_percentage']
             : 0;
         $artworkPath = null;
         $previewPath = null;
 
         try {
-            $order = DB::transaction(function () use ($request, $validated, $quantity, $unitPrice, $discountPercentage, &$artworkPath, &$previewPath): CustomCupOrder {
+            $order = DB::transaction(function () use ($request, $validated, $quantity, $customCup, $unitPrice, $discountPercentage, &$artworkPath, &$previewPath): CustomCupOrder {
                 $order = CustomCupOrder::create([
                     'user_id' => $request->user()?->id,
                     'order_number' => 'CM-'.now()->format('ymd').'-'.Str::upper(Str::random(7)),
@@ -42,7 +43,7 @@ class CustomCupOrderController extends Controller
                     'shipping_ward' => $validated['shipping_ward'],
                     'shipping_address' => $validated['shipping_address'],
                     'cup_variant' => $validated['cup_variant'],
-                    'cup_size' => config('store.custom_cup.size'),
+                    'cup_size' => $customCup['size'],
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'discount_percentage' => $discountPercentage,

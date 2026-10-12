@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomCupOrder;
+use App\Services\CustomCupConfig;
 use App\Services\CustomCupOrderPreview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class AdminCustomCupOrderController extends Controller
         'cancelled' => 'Đã hủy',
     ];
 
-    public function index(Request $request): View
+    public function index(Request $request, CustomCupConfig $config): View
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],
@@ -63,6 +64,7 @@ class AdminCustomCupOrderController extends Controller
 
         return view('admin.custom-cup-orders.index', [
             'orders' => $orders,
+            'variants' => $config->all()['variants'],
             'search' => $validated['search'] ?? '',
             'selectedStatus' => $validated['status'] ?? '',
             'selectedSort' => $validated['sort'] ?? 'newest',
@@ -71,11 +73,11 @@ class AdminCustomCupOrderController extends Controller
         ]);
     }
 
-    public function show(CustomCupOrder $order): View
+    public function show(CustomCupOrder $order, CustomCupConfig $config): View
     {
         return view('admin.custom-cup-orders.show', [
             'order' => $order,
-            'cupVariant' => config("store.custom_cup.variants.{$order->cup_variant}"),
+            'cupVariant' => $config->all()['variants'][$order->cup_variant] ?? null,
             'statusLabels' => self::STATUS_LABELS,
         ]);
     }
