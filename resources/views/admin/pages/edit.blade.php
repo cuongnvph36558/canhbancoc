@@ -9,7 +9,7 @@
             <h1>Chỉnh sửa trang {{ $definition['title'] }}</h1>
             <p>{{ $definition['description'] }}</p>
         </div>
-        <a href="{{ $page === 'home' ? route('home') : route('about') }}" class="admin-btn-secondary" target="_blank" rel="noopener">
+        <a href="{{ match ($page) { 'home' => route('home'), 'about' => route('about'), 'contact' => route('contact'), default => route('home') } }}" class="admin-btn-secondary" target="_blank" rel="noopener">
             Xem trang <span aria-hidden="true">↗</span>
         </a>
     </div>
@@ -18,6 +18,7 @@
         <a @class(['admin-page-tab', 'is-active' => $page === 'home']) href="{{ route('admin.pages.edit', 'home') }}">Trang chủ</a>
         <a @class(['admin-page-tab', 'is-active' => $page === 'about']) href="{{ route('admin.pages.edit', 'about') }}">Giới thiệu</a>
         <a @class(['admin-page-tab', 'is-active' => $page === 'header_footer']) href="{{ route('admin.pages.edit', 'header_footer') }}">Header & Footer</a>
+        <a @class(['admin-page-tab', 'is-active' => $page === 'contact']) href="{{ route('admin.pages.edit', 'contact') }}">Liên hệ</a>
     </nav>
 
     @if (session('success'))
