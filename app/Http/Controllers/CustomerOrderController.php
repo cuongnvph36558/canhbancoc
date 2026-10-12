@@ -37,19 +37,45 @@ class CustomerOrderController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $searchQuery = $request->input('q');
+        $statusFilter = $request->input('status');
+        $sortOption = $request->input('sort', 'newest');
+
+        $ordersQuery = Order::query()
+            ->where('user_id', $user->id)
+            ->with('items:id,order_id,product_name,product_image,quantity,line_total');
+
+        $customOrdersQuery = CustomCupOrder::query()
+            ->where('user_id', $user->id);
+
+        if ($searchQuery) {
+            $ordersQuery->where('order_number', 'like', "%{$searchQuery}%");
+            $customOrdersQuery->where('order_number', 'like', "%{$searchQuery}%");
+        }
+
+        $sortColumn = match ($sortOption) {
+            'oldest' => 'id',
+            'price_asc' => 'total',
+            'price_desc' => 'total',
+            default => 'id',
+        };
+        $sortDirection = match ($sortOption) {
+            'oldest' => 'asc',
+            'price_asc' => 'asc',
+            'price_desc' => 'desc',
+            default => 'desc',
+        };
+
+        if ($statusFilter) {
+            $ordersQuery->where('order_status', $statusFilter);
+        }
+
+        $orders = $ordersQuery->orderBy($sortColumn, $sortDirection)->paginate(10, ['*'], 'orders_page')->withQueryString();
+        $customOrders = $customOrdersQuery->latest('id')->paginate(10, ['*'], 'custom_orders_page')->withQueryString();
 
         return view('store.orders.index', [
-            'orders' => Order::query()
-                ->where('user_id', $user->id)
-                ->with('items:id,order_id,product_name,product_image,quantity,line_total')
-                ->latest('id')
-                ->paginate(10, ['*'], 'orders_page')
-                ->withQueryString(),
-            'customOrders' => CustomCupOrder::query()
-                ->where('user_id', $user->id)
-                ->latest('id')
-                ->paginate(10, ['*'], 'custom_orders_page')
-                ->withQueryString(),
+            'orders' => $orders,
+            'customOrders' => $customOrders,
             'orderStatusLabels' => self::ORDER_STATUS_LABELS,
             'customOrderStatusLabels' => self::CUSTOM_ORDER_STATUS_LABELS,
         ]);

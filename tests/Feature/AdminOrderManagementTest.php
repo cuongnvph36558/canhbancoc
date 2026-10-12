@@ -29,7 +29,7 @@ class AdminOrderManagementTest extends TestCase
         $this->withoutVite();
         $admin = User::factory()->create(['role' => 'admin']);
         [$order] = $this->createOrder('COD-ORDER-001', 'cod');
-        $this->createOrder('VN-ORDER-002', 'vnpay');
+        $this->createOrder('COD-ORDER-002', 'cod');
 
         $this->actingAs($admin)
             ->get(route('admin.orders.index', ['search' => 'COD-ORDER-001', 'status' => Order::STATUS_PENDING]))
@@ -120,7 +120,7 @@ class AdminOrderManagementTest extends TestCase
     public function test_admin_cannot_cancel_an_order_that_is_already_paid(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        [$order] = $this->createOrder('PAID-ORDER-001', 'vnpay', Order::PAYMENT_PAID);
+        [$order] = $this->createOrder('PAID-ORDER-001', 'cod', Order::PAYMENT_PAID);
         $order->update(['inventory_reserved' => false]);
 
         $this->actingAs($admin)
@@ -133,10 +133,10 @@ class AdminOrderManagementTest extends TestCase
         $this->assertSame(Order::PAYMENT_PAID, $order->fresh()->payment_status);
     }
 
-    public function test_admin_cannot_mark_unpaid_vnpay_order_as_delivered(): void
+    public function test_admin_cannot_mark_unpaid_bank_qr_order_as_delivered(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        [$order] = $this->createOrder('VN-UNPAID-001', Order::PAYMENT_METHOD_VNPAY);
+        [$order] = $this->createOrder('QR-UNPAID-001', Order::PAYMENT_METHOD_BANK_QR);
 
         $this->actingAs($admin)
             ->patch(route('admin.orders.update-status', $order), ['order_status' => Order::STATUS_DELIVERED])
@@ -148,10 +148,10 @@ class AdminOrderManagementTest extends TestCase
         $this->assertSame(Order::PAYMENT_PENDING, $order->fresh()->payment_status);
     }
 
-    public function test_admin_cannot_process_unpaid_vnpay_orders(): void
+    public function test_admin_cannot_process_unpaid_bank_qr_orders(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        [$order, $product] = $this->createOrder('VN-PENDING-001', Order::PAYMENT_METHOD_VNPAY);
+        [$order, $product] = $this->createOrder('QR-PENDING-001', Order::PAYMENT_METHOD_BANK_QR);
 
         $this->actingAs($admin)
             ->patch(route('admin.orders.update-status', $order), ['order_status' => Order::STATUS_PROCESSING])
@@ -205,7 +205,7 @@ class AdminOrderManagementTest extends TestCase
     public function test_admin_cannot_confirm_payment_for_an_order_that_is_not_pending_bank_qr(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        [$order] = $this->createOrder('QR-TRANSFER-002', Order::PAYMENT_METHOD_VNPAY);
+        [$order] = $this->createOrder('COD-TRANSFER-002', Order::PAYMENT_METHOD_COD);
 
         $this->actingAs($admin)
             ->patch(route('admin.orders.confirm-bank-qr-payment', $order))

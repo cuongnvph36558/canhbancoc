@@ -10,6 +10,64 @@
                 <p>Theo dõi đơn cốc thường và đơn cốc custom của bạn tại một nơi.</p>
             </div>
 
+            <div class="customer-orders-controls">
+                <form method="GET" action="{{ route('customer.orders.index') }}" class="customer-orders-search-form">
+                    <label for="order-search" class="visually-hidden">Tìm kiếm đơn hàng</label>
+                    <div class="customer-orders-search-input-wrapper">
+                        <span class="customer-orders-search-icon" aria-hidden="true">🔍</span>
+                        <input
+                            type="text"
+                            id="order-search"
+                            name="q"
+                            value="{{ request('q') }}"
+                            placeholder="Tìm theo mã đơn hàng..."
+                            autocomplete="off"
+                        >
+                        @if (request('q'))
+                            <a href="{{ route('customer.orders.index', array_filter(request()->except('q'))) }}" class="customer-orders-search-clear" aria-label="Xóa tìm kiếm">×</a>
+                        @endif
+                    </div>
+                    <button type="submit" class="customer-orders-search-btn">Tìm kiếm</button>
+                </form>
+
+                <form method="GET" action="{{ route('customer.orders.index') }}" class="customer-orders-filter-form" id="orders-filter-form">
+                    <input type="hidden" name="q" value="{{ request('q') }}">
+                    <div class="customer-orders-filter-row">
+                        <label for="orders-status-filter" class="customer-orders-filter-label">Trạng thái:</label>
+                        <select id="orders-status-filter" name="status" class="customer-orders-filter-select">
+                            <option value="">Tất cả</option>
+                            @foreach ($orderStatusLabels as $value => $label)
+                                <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="customer-orders-filter-row">
+                        <label for="orders-sort" class="customer-orders-filter-label">Sắp xếp:</label>
+                        <select id="orders-sort" name="sort" class="customer-orders-filter-select">
+                            <option value="newest" @selected(request('sort', 'newest') === 'newest')>Mới nhất</option>
+                            <option value="oldest" @selected(request('sort') === 'oldest')>Cũ nhất</option>
+                            <option value="price_desc" @selected(request('sort') === 'price_desc')>Giá cao → thấp</option>
+                            <option value="price_asc" @selected(request('sort') === 'price_asc')>Giá thấp → cao</option>
+                        </select>
+                    </div>
+                    @if (request('status') || request('sort', 'newest') !== 'newest' || request('q'))
+                        <a href="{{ route('customer.orders.index') }}" class="customer-orders-clear-filters">Xóa lọc</a>
+                    @endif
+                </form>
+            </div>
+
+            @if (request('q') || request('status'))
+                <p class="customer-orders-search-result">
+                    @if (request('q'))
+                        Kết quả tìm kiếm cho "<strong>{{ request('q') }}</strong>"
+                        @if (request('status')) · @endif
+                    @endif
+                    @if (request('status'))
+                        Lọc: <strong>{{ $orderStatusLabels[request('status')] ?? request('status') }}</strong>
+                    @endif
+                </p>
+            @endif
+
             <section class="customer-order-section" aria-labelledby="regular-orders-heading">
                 <div class="customer-order-section-heading">
                     <div>
@@ -108,4 +166,21 @@
             </section>
         </div>
     </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('orders-filter-form');
+        const statusSelect = document.getElementById('orders-status-filter');
+        const sortSelect = document.getElementById('orders-sort');
+
+        const submitFilterForm = () => {
+            if (filterForm) {
+                filterForm.submit();
+            }
+        };
+
+        statusSelect?.addEventListener('change', submitFilterForm);
+        sortSelect?.addEventListener('change', submitFilterForm);
+    });
+    </script>
 @endsection

@@ -26,14 +26,48 @@ class AdminCustomCupOrderController extends Controller
         'cancelled' => 'Đã hủy',
     ];
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+            'status' => ['nullable', 'string', Rule::in(array_keys(self::STATUS_LABELS))],
+            'sort' => ['nullable', 'string', Rule::in(['newest', 'oldest', 'price_asc', 'price_desc'])],
+        ]);
+
+        $sortColumn = match ($validated['sort'] ?? 'newest') {
+            'oldest' => 'id',
+            'price_asc' => 'total_amount',
+            'price_desc' => 'total_amount',
+            default => 'id',
+        };
+        $sortDirection = match ($validated['sort'] ?? 'newest') {
+            'oldest' => 'asc',
+            'price_asc' => 'asc',
+            'price_desc' => 'desc',
+            default => 'desc',
+        };
+
+        $orders = CustomCupOrder::query()
+            ->when($validated['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($q) use ($search): void {
+                    $q->where('order_number', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_phone', 'like', "%{$search}%")
+                        ->orWhere('customer_email', 'like', "%{$search}%");
+                });
+            })
+            ->when($validated['status'] ?? null, fn ($query, string $status): object => $query->where('status', $status))
+            ->orderBy($sortColumn, $sortDirection)
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.custom-cup-orders.index', [
-            'orders' => CustomCupOrder::query()
-                ->latest('id')
-                ->paginate(15),
-            'pendingCount' => CustomCupOrder::query()->where('status', 'pending')->count(),
+            'orders' => $orders,
+            'search' => $validated['search'] ?? '',
+            'selectedStatus' => $validated['status'] ?? '',
+            'selectedSort' => $validated['sort'] ?? 'newest',
             'statusLabels' => self::STATUS_LABELS,
+            'pendingCount' => CustomCupOrder::query()->where('status', 'pending')->count(),
         ]);
     }
 

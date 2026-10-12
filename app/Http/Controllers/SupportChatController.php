@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class SupportChatController extends Controller
@@ -49,13 +50,14 @@ class SupportChatController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['required_without:image', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
         $user = $request->user();
         abort_unless($user instanceof User, 401);
 
         $conversation = $user->supportConversation()->firstOrCreate();
-        $this->persistMessage($conversation, $user, $validated['body']);
+        $this->persistMessage($conversation, $user, $validated['body'] ?? null, $request->file('image'));
 
         return to_route('chat.index');
     }
@@ -110,12 +112,13 @@ class SupportChatController extends Controller
     public function adminStore(Request $request, SupportConversation $supportConversation): RedirectResponse
     {
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['required_without:image', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
         $admin = $request->user();
         abort_unless($admin instanceof User, 401);
 
-        $this->persistMessage($supportConversation, $admin, $validated['body']);
+        $this->persistMessage($supportConversation, $admin, $validated['body'] ?? null, $request->file('image'));
 
         return to_route('admin.chat.show', $supportConversation);
     }
@@ -136,13 +139,20 @@ class SupportChatController extends Controller
         ]);
     }
 
-    private function persistMessage(SupportConversation $conversation, User $sender, string $body): void
+    private function persistMessage(SupportConversation $conversation, User $sender, ?string $body, $image = null): void
     {
-        $message = DB::transaction(function () use ($conversation, $sender, $body): SupportMessage {
+        $imagePath = null;
+
+        if ($image) {
+            $imagePath = $image->store('chat-images', 'public');
+        }
+
+        $message = DB::transaction(function () use ($conversation, $sender, $body, $imagePath): SupportMessage {
             $message = $conversation->messages()->create([
                 'sender_id' => $sender->id,
                 'sender_role' => $sender->isAdmin() ? 'admin' : 'client',
-                'body' => $body,
+                'body' => $body ?? '',
+                'image_path' => $imagePath,
             ]);
 
             $conversation->update([
@@ -165,15 +175,22 @@ class SupportChatController extends Controller
     }
 
     /**
-     * @return array{id: int, sender_id: int|null, sender_role: string, body: string, time: string}
+     * @return array{id: int, sender_id: int|null, sender_role: string, body: string, image_url: string|null, time: string}
      */
     private function messagePayload(SupportMessage $message): array
     {
+        $imageUrl = null;
+
+        if ($message->image_path) {
+            $imageUrl = Storage::disk('public')->url($message->image_path);
+        }
+
         return [
             'id' => $message->id,
             'sender_id' => $message->sender_id,
             'sender_role' => $message->sender_role,
             'body' => $message->body,
+            'image_url' => $imageUrl,
             'time' => $message->created_at->format('H:i d/m/Y'),
         ];
     }

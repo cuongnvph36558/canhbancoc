@@ -40,16 +40,34 @@
                 <p>Đơn mới nhất được hiển thị trước.</p>
             </div>
             <form class="admin-order-filters" method="GET" action="{{ route('admin.orders.index') }}">
-                <label class="sr-only" for="order-search">Tìm theo mã đơn hoặc thông tin khách hàng</label>
-                <input id="order-search" type="search" name="search" value="{{ $search }}" placeholder="Mã đơn, tên, email, số điện thoại">
-                <label class="sr-only" for="order-status-filter">Lọc theo trạng thái</label>
-                <select id="order-status-filter" name="status">
-                    <option value="">Tất cả trạng thái</option>
-                    @foreach ($statusLabels as $value => $label)
-                        <option value="{{ $value }}" @selected($selectedStatus === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-                <button class="admin-action-button" type="submit">Lọc đơn</button>
+                <div class="admin-filter-row">
+                    <div class="admin-filter-group">
+                        <label class="sr-only" for="order-search">Tìm theo mã đơn hoặc thông tin khách hàng</label>
+                        <input id="order-search" type="search" name="search" value="{{ $search }}" placeholder="Mã đơn, tên, email, số điện thoại">
+                    </div>
+                    <div class="admin-filter-group">
+                        <label class="sr-only" for="order-status-filter">Lọc theo trạng thái</label>
+                        <select id="order-status-filter" name="status">
+                            <option value="">Tất cả trạng thái</option>
+                            @foreach ($statusLabels as $value => $label)
+                                <option value="{{ $value }}" @selected($selectedStatus === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label class="sr-only" for="order-sort">Sắp xếp theo</label>
+                        <select id="order-sort" name="sort">
+                            <option value="newest" @selected($selectedSort === 'newest')>Mới nhất trước</option>
+                            <option value="oldest" @selected($selectedSort === 'oldest')>Cũ nhất trước</option>
+                            <option value="price_desc" @selected($selectedSort === 'price_desc')>Giá giảm dần</option>
+                            <option value="price_asc" @selected($selectedSort === 'price_asc')>Giá tăng dần</option>
+                        </select>
+                    </div>
+                    <button class="admin-action-button" type="submit">Lọc đơn</button>
+                    @if ($search || $selectedStatus || $selectedSort !== 'newest')
+                        <a href="{{ route('admin.orders.index') }}" class="admin-action-button admin-action-button-secondary">Xóa lọc</a>
+                    @endif
+                </div>
             </form>
         </div>
 

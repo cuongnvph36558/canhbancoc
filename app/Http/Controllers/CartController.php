@@ -112,4 +112,36 @@ class CartController extends Controller
 
         return to_route('cart.index')->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'product_ids' => ['required', 'string'],
+        ]);
+
+        $productIds = json_decode($validated['product_ids'], true);
+
+        if (! is_array($productIds) || empty($productIds)) {
+            return to_route('cart.index')->withErrors(['cart' => 'Không có sản phẩm nào được chọn.']);
+        }
+
+        $cart = $request->session()->get('cart', []);
+        $removedCount = 0;
+
+        foreach ($productIds as $productId) {
+            $productId = (int) $productId;
+            if (array_key_exists($productId, $cart)) {
+                unset($cart[$productId]);
+                $removedCount++;
+            }
+        }
+
+        $request->session()->put('cart', $cart);
+
+        $message = $removedCount === 1
+            ? 'Đã xóa sản phẩm khỏi giỏ hàng.'
+            : "Đã xóa {$removedCount} sản phẩm khỏi giỏ hàng.";
+
+        return to_route('cart.index')->with('success', $message);
+    }
 }

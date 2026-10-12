@@ -64,7 +64,7 @@ const storefront = document.querySelector('.cup-original');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 if (storefront) {
-    const revealItems = [...storefront.querySelectorAll('.reveal')];
+    const revealItems = [...storefront.querySelectorAll('.reveal, .reveal-up, .reveal-scale, .reveal-fade, .reveal-stagger')];
 
     if (!prefersReducedMotion.matches && 'IntersectionObserver' in window) {
         const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -85,6 +85,35 @@ if (storefront) {
         revealItems.forEach((item) => item.classList.add('is-visible'));
     }
 }
+
+// Magnetic button effect
+document.querySelectorAll('.magnetic-btn').forEach((btn) => {
+    btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        
+        btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+        btn.style.transform = '';
+    });
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
 
 const cupSearch = document.querySelector('#cup-search');
 const cupProducts = [...document.querySelectorAll('[data-cup-product]')];
@@ -173,6 +202,7 @@ if (cupDesigner) {
     const removeBackgroundButton = cupDesigner.querySelector('[data-remove-background]');
     const restoreBackgroundButton = cupDesigner.querySelector('[data-restore-background]');
     const backgroundRemovalStatus = cupDesigner.querySelector('[data-background-removal-status]');
+    const artworkActions = cupDesigner.querySelector('[data-artwork-actions]');
     const orderForm = cupDesigner.matches('form') ? cupDesigner : cupDesigner.querySelector('form');
     const orderSubmitButton = orderForm?.querySelector('[type="submit"]');
     const layerEditor = cupDesigner.querySelector('[data-layer-editor]');
@@ -813,7 +843,7 @@ if (cupDesigner) {
         addDesignItem(type, content, x, y, width);
     });
 
-    artworkInput?.addEventListener('change', () => {
+    artworkInput?.addEventListener('change', async () => {
         const artwork = artworkInput.files?.[0];
 
         if (!artwork) {
@@ -844,7 +874,77 @@ if (cupDesigner) {
         showArtworkPreview(artwork);
         updateArtworkControls();
         prepareBackgroundRemovalPipeline();
+
+        // AUTO BACKGROUND REMOVAL: Trigger immediately after image upload
+        if (backgroundRemovalStatus) {
+            backgroundRemovalStatus.textContent = 'Đang xử lý ảnh...';
+            backgroundRemovalStatus.classList.add('processing');
+        }
+
+        // Auto-trigger background removal after showing preview
+        await performAutoBackgroundRemoval();
     });
+
+    const performAutoBackgroundRemoval = async () => {
+        const artwork = artworkInput?.files?.[0];
+
+        if (!artwork || !originalArtworkFile || isProcessingBackgroundRemoval || backgroundRemovalApplied) {
+            return;
+        }
+
+        isProcessingBackgroundRemoval = true;
+        updateArtworkControls();
+
+        if (backgroundRemovalStatus) {
+            backgroundRemovalStatus.textContent = 'Đang khởi tạo mô hình AI...';
+        }
+
+        try {
+            const removeBackground = await getBackgroundRemovalPipeline();
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = 'Đang tách nền ảnh tự động...';
+            }
+
+            const result = await removeBackground(artwork);
+            const transparentImage = await result.toBlob('image/png');
+
+            if (transparentImage.size > 5 * 1024 * 1024) {
+                throw new Error('Ảnh PNG sau khi tách nền vượt quá giới hạn 5 MB.');
+            }
+
+            const filename = `${artwork.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
+            const processedArtwork = new File([transparentImage], filename, { type: 'image/png' });
+            setArtworkInputFile(processedArtwork);
+            backgroundRemovalApplied = true;
+            showArtworkPreview(processedArtwork, filename);
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = '✓ Đã tách nền tự động!';
+                backgroundRemovalStatus.classList.remove('processing');
+                backgroundRemovalStatus.classList.add('success');
+            }
+
+            // Show artwork actions if hidden
+            const artworkActions = cupDesigner.querySelector('[data-artwork-actions]');
+            if (artworkActions) {
+                artworkActions.hidden = false;
+            }
+        } catch (error) {
+            console.error('Không thể tách nền ảnh:', error);
+
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = error instanceof Error && error.message.includes('vượt quá giới hạn')
+                    ? 'Ảnh sau khi tách nền vượt giới hạn 5 MB. Hãy thử ảnh có kích thước nhỏ hơn.'
+                    : 'Không thể tách nền tự động. Vui lòng thử lại.';
+                backgroundRemovalStatus.classList.remove('processing');
+                backgroundRemovalStatus.classList.add('error');
+            }
+        } finally {
+            isProcessingBackgroundRemoval = false;
+            updateArtworkControls();
+        }
+    };
 
     removeBackgroundButton?.addEventListener('click', async () => {
         const artwork = artworkInput?.files?.[0];
@@ -1038,6 +1138,9 @@ document.querySelectorAll('[data-support-chat]').forEach((chat) => {
     const status = chat.querySelector('[data-chat-status]');
     const pollUrl = chat.dataset.pollUrl;
     const currentUserId = Number(chat.dataset.currentUserId);
+    const chatComposer = chat.querySelector('.chat-composer');
+    const imageInput = chatComposer?.querySelector('[data-chat-image-input]');
+    const imagePreview = chatComposer?.querySelector('[data-chat-image-preview]');
     let lastMessageId = Number(chat.dataset.lastMessageId ?? 0);
 
     if (!transcript || !status || !pollUrl) {
@@ -1046,9 +1149,48 @@ document.querySelectorAll('[data-support-chat]').forEach((chat) => {
 
     transcript.scrollTop = transcript.scrollHeight;
 
-    const appendMessage = (message) => {
-        transcript.querySelector('[data-chat-empty]')?.remove();
+    // Handle image preview
+    const handleImagePreview = () => {
+        if (!imageInput || !imagePreview) {
+            return;
+        }
 
+        const file = imageInput.files?.[0];
+
+        if (!file) {
+            imagePreview.innerHTML = '';
+            imagePreview.hidden = true;
+            return;
+        }
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            imagePreview.innerHTML = '<span class="chat-form-error">Chọn ảnh JPG, PNG hoặc WEBP có dung lượng không quá 5 MB.</span>';
+            imagePreview.hidden = false;
+            imageInput.value = '';
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+
+        imagePreview.innerHTML = `
+            <img src="${objectUrl}" alt="Xem trước ảnh sẽ gửi">
+            <button type="button" class="chat-image-preview-remove" data-remove-image aria-label="Xóa ảnh">×</button>
+        `;
+        imagePreview.hidden = false;
+
+        imagePreview.querySelector('[data-remove-image]')?.addEventListener('click', () => {
+            imageInput.value = '';
+            imagePreview.innerHTML = '';
+            imagePreview.hidden = true;
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        });
+    };
+
+    imageInput?.addEventListener('change', handleImagePreview);
+
+    const createMessageElement = (message) => {
         const article = document.createElement('article');
         article.className = 'chat-message';
         article.dataset.chatMessageId = String(message.id);
@@ -1065,13 +1207,35 @@ document.querySelectorAll('[data-support-chat]').forEach((chat) => {
                 ? (chat.dataset.viewerRole === 'admin' ? 'Admin' : 'Cốc Mơ')
                 : (chat.dataset.contactName ?? 'Khách hàng'));
 
-        const body = document.createElement('p');
-        body.textContent = message.body;
+        article.append(sender);
+
+        if (message.image_url) {
+            const imageContainer = document.createElement('p');
+            imageContainer.className = 'chat-message-image';
+            const img = document.createElement('img');
+            img.src = message.image_url;
+            img.alt = 'Hình ảnh trong tin nhắn';
+            img.loading = 'lazy';
+            imageContainer.append(img);
+            article.append(imageContainer);
+        }
+
+        if (message.body) {
+            const body = document.createElement('p');
+            body.textContent = message.body;
+            article.append(body);
+        }
 
         const time = document.createElement('time');
         time.textContent = message.time;
+        article.append(time);
 
-        article.append(sender, body, time);
+        return article;
+    };
+
+    const appendMessage = (message) => {
+        transcript.querySelector('[data-chat-empty]')?.remove();
+        const article = createMessageElement(message);
         transcript.append(article);
         transcript.scrollTop = transcript.scrollHeight;
     };
@@ -1097,7 +1261,7 @@ document.querySelectorAll('[data-support-chat]').forEach((chat) => {
             }
 
             payload.messages.forEach((message) => {
-                if (!Number.isInteger(message.id) || typeof message.body !== 'string') {
+                if (!Number.isInteger(message.id) || (typeof message.body !== 'string' && !message.image_url)) {
                     throw new Error('Dữ liệu tin nhắn không hợp lệ.');
                 }
 

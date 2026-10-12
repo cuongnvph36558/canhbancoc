@@ -49,17 +49,17 @@ class AdminController extends Controller
             ->where('payment_status', Order::PAYMENT_PAID)
             ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->sum('total') + (float) CustomCupOrder::query()
-                ->whereNotIn('status', ['pending', 'cancelled'])
-                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-                ->sum('total_amount');
+            ->whereNotIn('status', ['pending', 'cancelled'])
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('total_amount');
 
         $todayRevenue = (float) Order::query()
             ->where('payment_status', Order::PAYMENT_PAID)
             ->whereBetween('paid_at', [now()->startOfDay(), now()->endOfDay()])
             ->sum('total') + (float) CustomCupOrder::query()
-                ->whereNotIn('status', ['pending', 'cancelled'])
-                ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
-                ->sum('total_amount');
+            ->whereNotIn('status', ['pending', 'cancelled'])
+            ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->sum('total_amount');
 
         $revenueStats = [
             'total' => $standardRevenue + $customCupRevenue,

@@ -4,6 +4,7 @@
 @section('content')
     <section class="shopping-page">
         <div class="container">
+            <div class="order-confirmation-wrapper">
             <div class="order-confirmation">
                 @if (session('success'))
                     <p class="shopping-alert is-success" role="status">{{ session('success') }}</p>
@@ -107,6 +108,7 @@
                     <div class="summary-total"><span>Tổng cộng</span><strong>{{ number_format((float) $order->total, 0, ',', '.') }}đ</strong></div>
                 </div>
                 <a class="shopping-primary-button" href="{{ route('products.index') }}">Tiếp tục khám phá</a>
+            </div>
             </div>
         </div>
     </section>

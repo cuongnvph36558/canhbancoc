@@ -94,7 +94,7 @@ class AdminUserManagementTest extends TestCase
             ->get(route('admin.users'))
             ->assertOk()
             ->assertSee('Doanh thu tổng')
-            ->assertSee(number_format(219000, 0, ',', '.') . '₫', false);
+            ->assertSee(number_format(219000, 0, ',', '.').'₫', false);
     }
 
     public function test_admin_can_assign_admin_role_to_a_client(): void

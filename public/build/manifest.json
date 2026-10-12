@@ -28,7 +28,7 @@
     "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
   },
   "node_modules/@huggingface/transformers/dist/transformers.web.js": {
-    "file": "assets/transformers.web-XR1ZGhee.js",
+    "file": "assets/transformers.web-TVQxR4F3.js",
     "name": "transformers.web",
     "src": "node_modules/@huggingface/transformers/dist/transformers.web.js",
     "isDynamicEntry": true,
@@ -44,7 +44,7 @@
     "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-B3hylh5p.css",
+    "file": "assets/app-Cdo_dMcU.css",
     "name": "app",
     "names": [
       "app.css"
@@ -53,7 +53,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BOKWcZc0.js",
+    "file": "assets/app-CcawBll3.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

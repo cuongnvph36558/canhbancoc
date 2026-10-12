@@ -124,7 +124,7 @@ class CustomerOrderControllerTest extends TestCase
             'total' => 130000,
             'order_status' => Order::STATUS_PROCESSING,
             'payment_status' => Order::PAYMENT_PAID,
-            'payment_method' => Order::PAYMENT_METHOD_VNPAY,
+            'payment_method' => Order::PAYMENT_METHOD_COD,
             'inventory_reserved' => false,
             'expires_at' => now()->addMinutes(15),
         ]);

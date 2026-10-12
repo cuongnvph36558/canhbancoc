@@ -36,6 +36,7 @@ Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/gio-hang', [CartController::class, 'store'])->name('cart.store');
 Route::put('/gio-hang/{productId}', [CartController::class, 'update'])->whereNumber('productId')->name('cart.update');
 Route::delete('/gio-hang/{productId}', [CartController::class, 'destroy'])->whereNumber('productId')->name('cart.destroy');
+Route::delete('/gio-hang', [CartController::class, 'bulkDestroy'])->name('cart.bulk-destroy');
 Route::middleware('guest')->group(function () {
     Route::get('/dang-nhap', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/dang-nhap', [AuthController::class, 'login'])->name('login.store');

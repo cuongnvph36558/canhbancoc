@@ -30,7 +30,14 @@
                     data-chat-message-id="{{ $message->id }}"
                 >
                     <span class="chat-message-sender">{{ $message->sender_id === $currentUserId ? 'Bạn' : ($message->sender_role === 'admin' ? 'Admin' : $conversation->user->name) }}</span>
-                    <p>{{ $message->body }}</p>
+                    @if ($message->image_path)
+                        <p class="chat-message-image">
+                            <img src="{{ Storage::disk('public')->url($message->image_path) }}" alt="Hình ảnh trong tin nhắn" loading="lazy">
+                        </p>
+                    @endif
+                    @if ($message->body)
+                        <p>{{ $message->body }}</p>
+                    @endif
                     <time>{{ $message->created_at->format('H:i d/m/Y') }}</time>
                 </article>
             @empty
@@ -38,12 +45,27 @@
             @endforelse
         </div>
         <p class="chat-status" data-chat-status role="status" aria-live="polite">Tin nhắn cập nhật tức thì khi khách hàng phản hồi.</p>
-        <form class="chat-composer" method="POST" action="{{ route('admin.chat.messages.store', $conversation) }}">
+        <form class="chat-composer" method="POST" action="{{ route('admin.chat.messages.store', $conversation) }}" enctype="multipart/form-data">
             @csrf
             <label class="sr-only" for="chat-message">Nội dung trả lời</label>
-            <textarea id="chat-message" name="body" rows="2" required maxlength="2000" placeholder="Nhập câu trả lời...">{{ old('body') }}</textarea>
-            <button class="button button-dark" type="submit">Gửi trả lời <span aria-hidden="true">↗</span></button>
+            <textarea id="chat-message" name="body" rows="2" maxlength="2000" placeholder="Nhập câu trả lời hoặc gửi ảnh...">{{ old('body') }}</textarea>
+            <div class="chat-composer-actions">
+                <label class="chat-image-upload" for="chat-image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="9" cy="9" r="2"></circle>
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                    </svg>
+                    <span class="sr-only">Gửi ảnh</span>
+                    <input type="file" id="chat-image" name="image" accept="image/jpeg,image/png,image/webp" data-chat-image-input hidden>
+                </label>
+                <button class="button button-dark" type="submit">Gửi trả lời <span aria-hidden="true">↗</span></button>
+            </div>
+            <p class="chat-image-preview" data-chat-image-preview hidden></p>
             @error('body')
+                <p class="chat-form-error" role="alert">{{ $message }}</p>
+            @enderror
+            @error('image')
                 <p class="chat-form-error" role="alert">{{ $message }}</p>
             @enderror
         </form>

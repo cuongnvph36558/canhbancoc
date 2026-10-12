@@ -14,8 +14,6 @@ class Order extends Model
 
     public const PAYMENT_FAILED = 'failed';
 
-    public const PAYMENT_METHOD_VNPAY = 'vnpay';
-
     public const PAYMENT_METHOD_BANK_QR = 'bank_qr';
 
     public const PAYMENT_METHOD_COD = 'cod';
@@ -54,8 +52,6 @@ class Order extends Model
         'payment_account_number',
         'payment_account_name',
         'payment_qr_image_path',
-        'vnp_transaction_no',
-        'vnp_bank_code',
         'inventory_reserved',
         'expires_at',
         'paid_at',

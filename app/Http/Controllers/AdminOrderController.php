@@ -30,7 +30,21 @@ class AdminOrderController extends Controller
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],
             'status' => ['nullable', 'string', Rule::in(array_keys(self::STATUS_LABELS))],
+            'sort' => ['nullable', 'string', Rule::in(['newest', 'oldest', 'price_asc', 'price_desc'])],
         ]);
+
+        $sortColumn = match ($validated['sort'] ?? 'newest') {
+            'oldest' => 'id',
+            'price_asc' => 'total',
+            'price_desc' => 'total',
+            default => 'id',
+        };
+        $sortDirection = match ($validated['sort'] ?? 'newest') {
+            'oldest' => 'asc',
+            'price_asc' => 'asc',
+            'price_desc' => 'desc',
+            default => 'desc',
+        };
 
         $orders = Order::query()
             ->withCount('items')
@@ -44,7 +58,7 @@ class AdminOrderController extends Controller
                 });
             })
             ->when($validated['status'] ?? null, fn (Builder $query, string $status): Builder => $query->where('order_status', $status))
-            ->latest('id')
+            ->orderBy($sortColumn, $sortDirection)
             ->paginate(15)
             ->withQueryString();
 
@@ -52,6 +66,7 @@ class AdminOrderController extends Controller
             'orders' => $orders,
             'search' => $validated['search'] ?? '',
             'selectedStatus' => $validated['status'] ?? '',
+            'selectedSort' => $validated['sort'] ?? 'newest',
             'statusLabels' => self::STATUS_LABELS,
             'totalOrders' => Order::query()->count(),
             'pendingOrders' => Order::query()->where('order_status', Order::STATUS_PENDING)->count(),

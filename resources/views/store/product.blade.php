@@ -153,39 +153,39 @@
                         <a href="tel:{{ preg_replace('/\s+/', '', config('store.phone')) }}">Gọi {{ config('store.phone') }}</a>
                     </p>
                 </section>
-
-                <section class="product-reviews" id="product-reviews" aria-labelledby="product-reviews-title">
-                    <div class="section-heading">
-                        <div>
-                            <span class="eyebrow">CHIA SẺ TỪ KHÁCH HÀNG</span>
-                            <h2 id="product-reviews-title">Đánh giá <em>sản phẩm.</em></h2>
-                        </div>
-                        @if ($reviewCount > 0)
-                            <p class="product-review-summary">
-                                <strong>{{ number_format((float) $reviewAverage, 1) }}/5</strong>
-                                <span>từ {{ $reviewCount }} đánh giá</span>
-                            </p>
-                        @endif
-                    </div>
-                    <div class="product-review-list">
-                        @forelse ($productReviews as $review)
-                            <article class="product-review-card">
-                                <div class="product-review-card-heading">
-                                    <strong>{{ $review->user->name }}</strong>
-                                    <span class="product-review-stars" aria-label="{{ $review->rating }} trên 5 sao">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
-                                    <time datetime="{{ $review->created_at->toDateString() }}">{{ $review->created_at->format('d/m/Y') }}</time>
-                                </div>
-                                <span class="product-review-verified">Đã mua và nhận hàng</span>
-                                @if ($review->comment)
-                                    <p>{{ $review->comment }}</p>
-                                @endif
-                            </article>
-                        @empty
-                            <p class="product-reviews-empty">Sản phẩm chưa có đánh giá. Bạn có thể chia sẻ cảm nhận sau khi nhận hàng.</p>
-                        @endforelse
-                    </div>
-                </section>
             </div>
+
+            <section class="product-reviews" id="product-reviews" aria-labelledby="product-reviews-title">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">CHIA SẺ TỪ KHÁCH HÀNG</span>
+                        <h2 id="product-reviews-title">Đánh giá <em>sản phẩm.</em></h2>
+                    </div>
+                    @if ($reviewCount > 0)
+                        <p class="product-review-summary">
+                            <strong>{{ number_format((float) $reviewAverage, 1) }}/5</strong>
+                            <span>từ {{ $reviewCount }} đánh giá</span>
+                        </p>
+                    @endif
+                </div>
+                <div class="product-review-list">
+                    @forelse ($productReviews as $review)
+                        <article class="product-review-card">
+                            <div class="product-review-card-heading">
+                                <strong>{{ $review->user->name }}</strong>
+                                <span class="product-review-stars" aria-label="{{ $review->rating }} trên 5 sao">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                                <time datetime="{{ $review->created_at->toDateString() }}">{{ $review->created_at->format('d/m/Y') }}</time>
+                            </div>
+                            <span class="product-review-verified">Đã mua và nhận hàng</span>
+                            @if ($review->comment)
+                                <p>{{ $review->comment }}</p>
+                            @endif
+                        </article>
+                    @empty
+                        <p class="product-reviews-empty">Sản phẩm chưa có đánh giá. Bạn có thể chia sẻ cảm nhận sau khi nhận hàng.</p>
+                    @endforelse
+                </div>
+            </section>
 
             <section class="product-information" id="product-information" aria-labelledby="product-information-title">
                 <div class="product-description-card">
