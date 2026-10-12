@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -34,6 +33,6 @@ class ProductImage extends Model
             return $this->image_url;
         }
 
-        return Storage::disk('public')->url($this->image_url);
+        return route('product-images.show', $this);
     }
 }

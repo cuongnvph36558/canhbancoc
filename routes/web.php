@@ -11,10 +11,15 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomCupOrderController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportChatController;
 use App\Http\Controllers\VNPayCallbackController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/product-images/{productImage}', ProductImageController::class)
+    ->whereNumber('productImage')
+    ->name('product-images.show');
 
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/san-pham', [StoreController::class, 'products'])->name('products.index');

@@ -13,6 +13,51 @@ class ProductImageManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_public_product_image_route_serves_uploaded_images_without_a_storage_symlink(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->create();
+        $imagePath = 'products/front.png';
+        Storage::disk('public')->put(
+            $imagePath,
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==')
+        );
+        $image = $product->images()->create([
+            'image_url' => $imagePath,
+            'position' => 0,
+            'is_primary' => true,
+        ]);
+
+        $this->assertSame(route('product-images.show', $image), $image->url());
+
+        $this->get($image->url())
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png')
+            ->assertHeader('Cache-Control', 'max-age=86400, public');
+    }
+
+    public function test_public_product_image_route_returns_not_found_when_the_file_is_missing(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->create();
+        $image = $product->images()->create([
+            'image_url' => 'products/missing.jpg',
+        ]);
+
+        $this->get($image->url())->assertNotFound();
+    }
+
+    public function test_public_product_image_route_does_not_serve_paths_outside_product_images(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->create();
+        $image = $product->images()->create([
+            'image_url' => 'products/../../.env',
+        ]);
+
+        $this->get($image->url())->assertNotFound();
+    }
+
     public function test_admin_can_create_product_with_multiple_uploaded_images(): void
     {
         $this->withoutVite();
