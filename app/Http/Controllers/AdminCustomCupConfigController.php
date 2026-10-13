@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CustomCupIcon;
 use App\Models\CustomCupSetting;
 use App\Models\CustomCupVariant;
 use App\Services\CustomCupConfig;
@@ -10,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -109,34 +107,6 @@ class AdminCustomCupConfigController extends Controller
         $this->config->refresh();
 
         return back()->with('success', 'Mẫu cốc đã được xóa.');
-    }
-
-    public function storeIcon(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'glyph' => ['required', 'string', 'max:16', Rule::unique('custom_cup_icons', 'glyph')],
-        ]);
-
-        DB::transaction(function () use ($validated): void {
-            $maxOrder = (int) CustomCupIcon::query()->max('sort_order');
-
-            CustomCupIcon::query()->create([
-                'glyph' => $validated['glyph'],
-                'sort_order' => $maxOrder + 1,
-            ]);
-        });
-
-        $this->config->refresh();
-
-        return back()->with('success', 'Biểu tượng đã được thêm.');
-    }
-
-    public function destroyIcon(CustomCupIcon $icon): RedirectResponse
-    {
-        $icon->delete();
-        $this->config->refresh();
-
-        return back()->with('success', 'Biểu tượng đã được xóa.');
     }
 
     private function uniqueVariantSlug(string $name): string

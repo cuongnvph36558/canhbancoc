@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './storefront.css';
 
 @theme {
     --color-ink: #23382e;
