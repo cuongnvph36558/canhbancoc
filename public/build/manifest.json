@@ -44,7 +44,7 @@
     "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CqiT3Esn.css",
+    "file": "assets/app-CbMM8uaP.css",
     "name": "app",
     "names": [
       "app.css"
