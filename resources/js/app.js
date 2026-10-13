@@ -229,9 +229,10 @@ if (cupDesigner) {
         y: Number(item.y),
         width: Number(item.width),
         font_size: clamp(Number(item.font_size ?? 100), 50, 200),
+        image_index: item.type === 'image' ? Number(item.image_index ?? 0) : null,
     }));
     let selectedItemIndex = null;
-    let artworkObjectUrl = null;
+    let artworkFiles = []; // [{file, objectUrl, originalFile, backgroundRemovalApplied}]
     let currentArtworkFile = null;
     let originalArtworkFile = null;
     let backgroundRemovalApplied = false;
@@ -240,6 +241,7 @@ if (cupDesigner) {
     let isPreparingOrder = false;
     let submitPreparedOrder = false;
     let selectedVariant = selectedVariantInput?.value ?? 'black';
+    let nextImageIndex = 0;
 
     const getTextFontSize = (fontScale) => clamp(window.innerWidth * 0.017, 13, 24) * fontScale / 100;
 
@@ -248,14 +250,18 @@ if (cupDesigner) {
             artworkInput.disabled = isProcessingBackgroundRemoval;
         }
 
+        const selectedItem = selectedItemIndex !== null ? designItems[selectedItemIndex] : null;
+        const selectedImageIndex = selectedItem?.type === 'image' ? selectedItem.image_index : null;
+        const selectedImageData = selectedImageIndex !== null ? artworkFiles[selectedImageIndex] : null;
+
         if (removeBackgroundButton) {
-            removeBackgroundButton.disabled = !currentArtworkFile
-                || backgroundRemovalApplied
+            removeBackgroundButton.disabled = !selectedImageData
+                || selectedImageData.backgroundRemovalApplied
                 || isProcessingBackgroundRemoval;
         }
 
         if (restoreBackgroundButton) {
-            restoreBackgroundButton.hidden = !backgroundRemovalApplied;
+            restoreBackgroundButton.hidden = !selectedImageData || !selectedImageData.backgroundRemovalApplied;
             restoreBackgroundButton.disabled = isProcessingBackgroundRemoval;
         }
 
@@ -265,41 +271,74 @@ if (cupDesigner) {
 
         if (removeLayerButton) {
             removeLayerButton.disabled = isProcessingBackgroundRemoval
-                && designItems[selectedItemIndex]?.type === 'image';
+                && selectedItem?.type === 'image';
         }
 
         [...(designItemsElement?.querySelectorAll('[data-layer-remove]') ?? [])].forEach((button, index) => {
-            button.disabled = isProcessingBackgroundRemoval && designItems[index]?.type === 'image';
+            const item = designItems[index];
+            button.disabled = isProcessingBackgroundRemoval && item?.type === 'image';
         });
     };
 
-    const setArtworkInputFile = (artwork) => {
+    const setArtworkInputFiles = (files) => {
         const fileTransfer = new DataTransfer();
 
-        fileTransfer.items.add(artwork);
+        files.forEach((file) => fileTransfer.items.add(file));
         artworkInput.files = fileTransfer.files;
-        currentArtworkFile = artwork;
+        artworkFiles = files.map((file) => ({
+            file,
+            objectUrl: URL.createObjectURL(file),
+            originalFile: file,
+            backgroundRemovalApplied: false,
+        }));
     };
 
-    const showArtworkPreview = (artwork, caption = artwork.name) => {
-        if (artworkObjectUrl) {
-            URL.revokeObjectURL(artworkObjectUrl);
-        }
+    const updateArtworkInputFiles = () => {
+        const files = artworkFiles.map((data) => data.file);
+        const fileTransfer = new DataTransfer();
 
-        artworkObjectUrl = URL.createObjectURL(artwork);
+        files.forEach((file) => fileTransfer.items.add(file));
+        artworkInput.files = fileTransfer.files;
+    };
+
+    const showArtworkPreview = (artwork, caption = artwork.name, imageIndex = null) => {
+        const idx = imageIndex !== null ? imageIndex : nextImageIndex++;
+        const objectUrl = URL.createObjectURL(artwork);
+
+        // Store artwork file info
+        const existingIndex = artworkFiles.findIndex((_, i) => i === idx);
+        if (existingIndex >= 0) {
+            URL.revokeObjectURL(artworkFiles[existingIndex].objectUrl);
+            artworkFiles[existingIndex] = {
+                file: artwork,
+                objectUrl,
+                originalFile: artwork,
+                backgroundRemovalApplied: false,
+            };
+        } else {
+            artworkFiles.push({
+                file: artwork,
+                objectUrl,
+                originalFile: artwork,
+                backgroundRemovalApplied: false,
+            });
+        }
 
         if (uploadCaption) {
             uploadCaption.textContent = caption;
         }
 
-        const existingArtwork = designItems.findIndex((item) => item.type === 'image');
+        // Find existing image item or add new one
+        const existingImageIndex = designItems.findIndex(
+            (item) => item.type === 'image' && item.image_index === idx,
+        );
 
-        if (existingArtwork >= 0) {
-            designItems[existingArtwork].content = 'artwork';
-            selectedItemIndex = existingArtwork;
+        if (existingImageIndex >= 0) {
+            designItems[existingImageIndex].content = 'artwork';
+            selectedItemIndex = existingImageIndex;
             renderDesignItems();
         } else {
-            addDesignItem('image', 'artwork', undefined, undefined, 38);
+            addDesignItem('image', 'artwork', undefined, undefined, 38, idx);
         }
     };
 
@@ -362,6 +401,9 @@ if (cupDesigner) {
 
         designItems.forEach((item, index) => {
             Object.entries(item).forEach(([key, value]) => {
+                if (value === null || value === undefined) {
+                    return;
+                }
                 const input = document.createElement('input');
 
                 input.type = 'hidden';
@@ -429,20 +471,28 @@ if (cupDesigner) {
         }
 
         const [removedItem] = designItems.splice(selectedItemIndex, 1);
+        const removedImageIndex = removedItem?.image_index ?? 0;
 
-        if (removedItem?.type === 'image' && artworkInput) {
-            artworkInput.value = '';
-            artworkInput.setCustomValidity('');
-            currentArtworkFile = null;
-            originalArtworkFile = null;
-            backgroundRemovalApplied = false;
-
-            if (artworkObjectUrl) {
-                URL.revokeObjectURL(artworkObjectUrl);
-                artworkObjectUrl = null;
+        if (removedItem?.type === 'image') {
+            // Revoke the object URL for this image
+            if (artworkFiles[removedImageIndex]?.objectUrl) {
+                URL.revokeObjectURL(artworkFiles[removedImageIndex].objectUrl);
             }
+            // Remove from artworkFiles array
+            artworkFiles.splice(removedImageIndex, 1);
+            // Update image indices in designItems
+            designItems.forEach((item) => {
+                if (item.type === 'image' && item.image_index > removedImageIndex) {
+                    item.image_index--;
+                }
+            });
+            nextImageIndex = Math.max(0, nextImageIndex - 1);
+            updateArtworkInputFiles();
+
             if (uploadCaption) {
-                uploadCaption.textContent = 'JPG, PNG hoặc WEBP · Tối đa 5 MB';
+                uploadCaption.textContent = artworkFiles.length === 0
+                    ? 'JPG, PNG hoặc WEBP · Tối đa 5 MB'
+                    : `${artworkFiles.length} ảnh đã chọn`;
             }
             if (backgroundRemovalStatus) {
                 backgroundRemovalStatus.textContent = '';
@@ -531,14 +581,16 @@ if (cupDesigner) {
             element.setAttribute('aria-pressed', String(index === selectedItemIndex));
 
             if (item.type === 'image') {
-                if (artworkObjectUrl) {
+                const imgData = artworkFiles[item.image_index ?? 0];
+
+                if (imgData?.objectUrl) {
                     const image = document.createElement('img');
 
-                    image.src = artworkObjectUrl;
+                    image.src = imgData.objectUrl;
                     image.alt = '';
                     element.append(image);
                 } else {
-                    element.textContent = 'Ảnh đã chọn';
+                    element.textContent = `Ảnh ${(item.image_index ?? 0) + 1}`;
                 }
             } else {
                 element.textContent = item.content;
@@ -566,7 +618,7 @@ if (cupDesigner) {
         updateSelectedLayer();
     };
 
-    const addDesignItem = (type, content, x, y, width = type === 'text' ? 60 : type === 'image' ? 38 : 20) => {
+    const addDesignItem = (type, content, x, y, width = type === 'text' ? 60 : type === 'image' ? 38 : 20, imageIndex = null) => {
         if (designItems.length >= 20) {
             return;
         }
@@ -589,6 +641,7 @@ if (cupDesigner) {
             x: clamp(Math.round(x), 0, 100 - width),
             y: clamp(Math.round(y), 0, 94),
             width,
+            image_index: type === 'image' ? (imageIndex !== null ? imageIndex : nextImageIndex++) : null,
         });
         selectedItemIndex = designItems.length - 1;
         renderDesignItems();
@@ -732,33 +785,38 @@ if (cupDesigner) {
                 context.clip();
                 context.fillText(designItem.content, x + itemWidth / 2, y + itemHeight / 2, itemWidth);
                 context.restore();
-            } else if (designItem?.type === 'image' && item.querySelector('img')) {
-                const image = item.querySelector('img');
-                const imageBitmap = new Image();
+            } else if (designItem?.type === 'image') {
+                const imageIndex = designItem.image_index ?? 0;
+                const imgData = artworkFiles[imageIndex];
 
-                imagePromises.push(new Promise((resolve) => {
-                    imageBitmap.onload = () => {
-                        const imageScale = Math.min(itemWidth / imageBitmap.width, itemHeight / imageBitmap.height);
-                        const imageWidth = imageBitmap.width * imageScale;
-                        const imageHeight = imageBitmap.height * imageScale;
+                if (imgData?.objectUrl) {
+                    const image = item.querySelector('img');
+                    const imageBitmap = new Image();
 
-                        context.save();
-                        context.beginPath();
-                        context.rect(printAreaX, printAreaY, printAreaWidth, printAreaHeight);
-                        context.clip();
-                        context.drawImage(
-                            imageBitmap,
-                            x + (itemWidth - imageWidth) / 2,
-                            y + (itemHeight - imageHeight) / 2,
-                            imageWidth,
-                            imageHeight,
-                        );
-                        context.restore();
-                        resolve();
-                    };
-                    imageBitmap.onerror = () => resolve(false);
-                    imageBitmap.src = image.src;
-                }));
+                    imagePromises.push(new Promise((resolve) => {
+                        imageBitmap.onload = () => {
+                            const imageScale = Math.min(itemWidth / imageBitmap.width, itemHeight / imageBitmap.height);
+                            const imageWidth = imageBitmap.width * imageScale;
+                            const imageHeight = imageBitmap.height * imageScale;
+
+                            context.save();
+                            context.beginPath();
+                            context.rect(printAreaX, printAreaY, printAreaWidth, printAreaHeight);
+                            context.clip();
+                            context.drawImage(
+                                imageBitmap,
+                                x + (itemWidth - imageWidth) / 2,
+                                y + (itemHeight - imageHeight) / 2,
+                                imageWidth,
+                                imageHeight,
+                            );
+                            context.restore();
+                            resolve();
+                        };
+                        imageBitmap.onerror = () => resolve(false);
+                        imageBitmap.src = imgData.objectUrl;
+                    }));
+                }
             }
         });
 
@@ -844,22 +902,24 @@ if (cupDesigner) {
     });
 
     artworkInput?.addEventListener('change', async () => {
-        const artwork = artworkInput.files?.[0];
+        const files = Array.from(artworkInput.files ?? []);
 
-        if (!artwork) {
+        if (files.length === 0) {
             return;
         }
 
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(artwork.type) || artwork.size > 5 * 1024 * 1024) {
+        // Validate first file
+        const firstFile = files[0];
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(firstFile.type) || firstFile.size > 5 * 1024 * 1024) {
             const errorMessage = 'Chọn ảnh JPG, PNG hoặc WEBP có dung lượng không quá 5 MB.';
 
             artworkInput.setCustomValidity(errorMessage);
             artworkInput.reportValidity();
             artworkInput.setCustomValidity('');
-            artworkInput.value = '';
 
-            if (currentArtworkFile) {
-                setArtworkInputFile(currentArtworkFile);
+            if (artworkFiles.length > 0) {
+                setArtworkInputFiles(artworkFiles.map((d) => d.file));
             }
 
             updateArtworkControls();
@@ -868,27 +928,63 @@ if (cupDesigner) {
         }
 
         artworkInput.setCustomValidity('');
-        currentArtworkFile = artwork;
-        originalArtworkFile = artwork;
-        backgroundRemovalApplied = false;
-        showArtworkPreview(artwork);
+
+        // Add each new file
+        for (const file of files) {
+            // Check for duplicates by name (simple check)
+            const isDuplicate = artworkFiles.some((existing) => existing.file.name === file.name);
+
+            if (!isDuplicate) {
+                const tempObjectUrl = URL.createObjectURL(file);
+                artworkFiles.push({
+                    file,
+                    objectUrl: tempObjectUrl,
+                    originalFile: file,
+                    backgroundRemovalApplied: false,
+                });
+            }
+        }
+
+        // Sync input files
+        setArtworkInputFiles(artworkFiles.map((d) => d.file));
+
+        if (uploadCaption) {
+            uploadCaption.textContent = `${artworkFiles.length} ảnh đã chọn`;
+        }
+
+        // Re-render to show all images
+        renderDesignItems();
         updateArtworkControls();
         prepareBackgroundRemovalPipeline();
 
-        // AUTO BACKGROUND REMOVAL: Trigger immediately after image upload
-        if (backgroundRemovalStatus) {
-            backgroundRemovalStatus.textContent = 'Đang xử lý ảnh...';
-            backgroundRemovalStatus.classList.add('processing');
-        }
+        // AUTO BACKGROUND REMOVAL: Trigger immediately after adding last image
+        const lastImageIndex = artworkFiles.length - 1;
+        if (lastImageIndex >= 0) {
+            // Select the newly added image item
+            const newImageItemIndex = designItems.findIndex(
+                (item) => item.type === 'image' && item.image_index === lastImageIndex,
+            );
+            if (newImageItemIndex >= 0) {
+                selectLayer(newImageItemIndex);
+            }
 
-        // Auto-trigger background removal after showing preview
-        await performAutoBackgroundRemoval();
+            // Show status
+            if (backgroundRemovalStatus) {
+                backgroundRemovalStatus.textContent = 'Đang xử lý ảnh...';
+                backgroundRemovalStatus.classList.add('processing');
+            }
+
+            // Auto-trigger background removal for the new image
+            await performAutoBackgroundRemoval();
+        }
     });
 
     const performAutoBackgroundRemoval = async () => {
-        const artwork = artworkInput?.files?.[0];
+        const selectedItem = selectedItemIndex !== null ? designItems[selectedItemIndex] : null;
+        const selectedImageIndex = selectedItem?.type === 'image' ? selectedItem.image_index : null;
+        const selectedImageData = selectedImageIndex !== null ? artworkFiles[selectedImageIndex] : null;
 
-        if (!artwork || !originalArtworkFile || isProcessingBackgroundRemoval || backgroundRemovalApplied) {
+        if (!selectedImageData || selectedImageData.backgroundRemovalApplied || isProcessingBackgroundRemoval) {
             return;
         }
 
@@ -906,29 +1002,31 @@ if (cupDesigner) {
                 backgroundRemovalStatus.textContent = 'Đang tách nền ảnh tự động...';
             }
 
-            const result = await removeBackground(artwork);
+            const result = await removeBackground(selectedImageData.file);
             const transparentImage = await result.toBlob('image/png');
 
             if (transparentImage.size > 5 * 1024 * 1024) {
                 throw new Error('Ảnh PNG sau khi tách nền vượt quá giới hạn 5 MB.');
             }
 
-            const filename = `${artwork.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
+            const filename = `${selectedImageData.file.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
             const processedArtwork = new File([transparentImage], filename, { type: 'image/png' });
-            setArtworkInputFile(processedArtwork);
-            backgroundRemovalApplied = true;
-            showArtworkPreview(processedArtwork, filename);
+
+            // Update artwork files
+            URL.revokeObjectURL(selectedImageData.objectUrl);
+            artworkFiles[selectedImageIndex] = {
+                file: processedArtwork,
+                objectUrl: URL.createObjectURL(processedArtwork),
+                originalFile: selectedImageData.originalFile,
+                backgroundRemovalApplied: true,
+            };
+            updateArtworkInputFiles();
+            showArtworkPreview(processedArtwork, filename, selectedImageIndex);
 
             if (backgroundRemovalStatus) {
                 backgroundRemovalStatus.textContent = '✓ Đã tách nền tự động!';
                 backgroundRemovalStatus.classList.remove('processing');
                 backgroundRemovalStatus.classList.add('success');
-            }
-
-            // Show artwork actions if hidden
-            const artworkActions = cupDesigner.querySelector('[data-artwork-actions]');
-            if (artworkActions) {
-                artworkActions.hidden = false;
             }
         } catch (error) {
             console.error('Không thể tách nền ảnh:', error);
@@ -947,9 +1045,11 @@ if (cupDesigner) {
     };
 
     removeBackgroundButton?.addEventListener('click', async () => {
-        const artwork = artworkInput?.files?.[0];
+        const selectedItem = selectedItemIndex !== null ? designItems[selectedItemIndex] : null;
+        const selectedImageIndex = selectedItem?.type === 'image' ? selectedItem.image_index : null;
+        const selectedImageData = selectedImageIndex !== null ? artworkFiles[selectedImageIndex] : null;
 
-        if (!artwork || !originalArtworkFile || isProcessingBackgroundRemoval) {
+        if (!selectedImageData || isProcessingBackgroundRemoval) {
             return;
         }
 
@@ -967,18 +1067,26 @@ if (cupDesigner) {
                 backgroundRemovalStatus.textContent = 'Đang tách nền ảnh...';
             }
 
-            const result = await removeBackground(artwork);
+            const result = await removeBackground(selectedImageData.file);
             const transparentImage = await result.toBlob('image/png');
 
             if (transparentImage.size > 5 * 1024 * 1024) {
                 throw new Error('Ảnh PNG sau khi tách nền vượt quá giới hạn 5 MB.');
             }
 
-            const filename = `${artwork.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
+            const filename = `${selectedImageData.file.name.replace(/\.[^.]+$/, '')}-da-tach-nen.png`;
             const processedArtwork = new File([transparentImage], filename, { type: 'image/png' });
-            setArtworkInputFile(processedArtwork);
-            backgroundRemovalApplied = true;
-            showArtworkPreview(processedArtwork, `${filename} · nền trong suốt`);
+
+            // Update artwork files
+            URL.revokeObjectURL(selectedImageData.objectUrl);
+            artworkFiles[selectedImageIndex] = {
+                file: processedArtwork,
+                objectUrl: URL.createObjectURL(processedArtwork),
+                originalFile: selectedImageData.originalFile,
+                backgroundRemovalApplied: true,
+            };
+            updateArtworkInputFiles();
+            showArtworkPreview(processedArtwork, `${filename} · nền trong suốt`, selectedImageIndex);
 
             if (backgroundRemovalStatus) {
                 backgroundRemovalStatus.textContent = 'Đã tách nền. Ảnh PNG trong suốt sẽ được gửi cùng đơn hàng.';
@@ -998,13 +1106,24 @@ if (cupDesigner) {
     });
 
     restoreBackgroundButton?.addEventListener('click', () => {
-        if (!originalArtworkFile || !artworkInput) {
+        const selectedItem = selectedItemIndex !== null ? designItems[selectedItemIndex] : null;
+        const selectedImageIndex = selectedItem?.type === 'image' ? selectedItem.image_index : null;
+        const selectedImageData = selectedImageIndex !== null ? artworkFiles[selectedImageIndex] : null;
+
+        if (!selectedImageData) {
             return;
         }
 
-        setArtworkInputFile(originalArtworkFile);
-        backgroundRemovalApplied = false;
-        showArtworkPreview(originalArtworkFile);
+        // Restore original file
+        URL.revokeObjectURL(selectedImageData.objectUrl);
+        artworkFiles[selectedImageIndex] = {
+            file: selectedImageData.originalFile,
+            objectUrl: URL.createObjectURL(selectedImageData.originalFile),
+            originalFile: selectedImageData.originalFile,
+            backgroundRemovalApplied: false,
+        };
+        updateArtworkInputFiles();
+        showArtworkPreview(selectedImageData.originalFile, selectedImageData.originalFile.name, selectedImageIndex);
         updateArtworkControls();
 
         if (backgroundRemovalStatus) {

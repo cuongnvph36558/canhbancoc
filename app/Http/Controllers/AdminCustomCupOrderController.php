@@ -119,14 +119,21 @@ class AdminCustomCupOrderController extends Controller
         ]);
     }
 
-    public function downloadArtwork(CustomCupOrder $order): StreamedResponse
+    public function downloadArtwork(Request $request, CustomCupOrder $order): StreamedResponse
     {
-        abort_if($order->artwork_path === null, 404);
+        $artworkPaths = $order->artwork_paths ?? ($order->artwork_path ? [$order->artwork_path] : []);
+
+        abort_if(empty($artworkPaths), 404);
+
+        $index = (int) $request->query('index', 0);
+        $artworkPath = $artworkPaths[$index] ?? $artworkPaths[0] ?? null;
+
+        abort_if($artworkPath === null, 404, 'Không tìm thấy hình in của đơn hàng.');
 
         $disk = Storage::disk('local');
 
-        abort_unless($disk->exists($order->artwork_path), 404, 'Không tìm thấy hình in của đơn hàng.');
+        abort_unless($disk->exists($artworkPath), 404, 'Không tìm thấy hình in của đơn hàng.');
 
-        return $disk->download($order->artwork_path);
+        return $disk->download($artworkPath);
     }
 }

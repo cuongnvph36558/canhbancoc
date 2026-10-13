@@ -75,6 +75,11 @@
                     <span aria-hidden="true">♙</span>
                     Khách hàng & phân quyền
                 </a>
+                <a @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.payment-settings.*')])
+                   href="{{ route('admin.payment-settings.edit') }}">
+                    <span aria-hidden="true">🏦</span>
+                    Thanh toán ngân hàng
+                </a>
             </nav>
 
             <div class="admin-sidebar-bottom">

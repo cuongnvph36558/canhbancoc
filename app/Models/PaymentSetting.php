@@ -11,6 +11,7 @@ class PaymentSetting extends Model
         'bank_name',
         'account_number',
         'account_name',
+        'qr_image_path',
         'is_enabled',
     ];
 

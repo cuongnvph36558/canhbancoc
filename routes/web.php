@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCustomCupConfigController;
 use App\Http\Controllers\AdminCustomCupOrderController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminPaymentSettingController;
 use App\Http\Controllers\AdminPageContentController;
 use App\Http\Controllers\AdminProductCategoryController;
 use App\Http\Controllers\AdminProductReviewController;
@@ -98,6 +99,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/coc-custom/mau-coc/{variant}', [AdminCustomCupConfigController::class, 'destroyVariant'])->name('admin.custom-cup-config.variants.destroy');
         Route::post('/admin/coc-custom/bieu-tuong', [AdminCustomCupConfigController::class, 'storeIcon'])->name('admin.custom-cup-config.icons.store');
         Route::delete('/admin/coc-custom/bieu-tuong/{icon}', [AdminCustomCupConfigController::class, 'destroyIcon'])->name('admin.custom-cup-config.icons.destroy');
+
+        Route::get('/admin/thanh-toan', [AdminPaymentSettingController::class, 'edit'])->name('admin.payment-settings.edit');
+        Route::put('/admin/thanh-toan', [AdminPaymentSettingController::class, 'update'])->name('admin.payment-settings.update');
+        Route::delete('/admin/thanh-toan/qr-image', [AdminPaymentSettingController::class, 'deleteQrImage'])->name('admin.payment-settings.delete-qr-image');
 
         Route::get('/admin/san-pham', [ProductController::class, 'index'])->name('admin.products.index');
         Route::get('/admin/san-pham/tao-moi', [ProductController::class, 'create'])->name('admin.products.create');

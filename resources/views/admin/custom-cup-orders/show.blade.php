@@ -79,6 +79,22 @@
             @if ($order->artwork_path)
                 <a class="admin-action-button" href="{{ route('admin.custom-cup-orders.artwork', $order) }}">Tải hình in khách gửi</a>
             @endif
+            @php
+                $artworkPaths = $order->artwork_paths ?? ($order->artwork_path ? [$order->artwork_path] : []);
+            @endphp
+            @if (count($artworkPaths) > 0)
+                <div class="admin-order-artwork-gallery">
+                    <h3>Hình in khách gửi ({{ count($artworkPaths) }} ảnh)</h3>
+                    <div class="admin-artwork-images">
+                        @foreach ($artworkPaths as $index => $artworkPath)
+                            <div class="admin-artwork-image-item">
+                                <img src="{{ route('admin.custom-cup-orders.artwork', ['order' => $order, 'index' => $index]) }}" alt="Hình in {{ $index + 1 }}">
+                                <span>Hình {{ $index + 1 }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             <div class="admin-order-preview">
                 <img src="{{ route('admin.custom-cup-orders.preview', $order) }}" alt="Preview cốc custom {{ $order->order_number }}" loading="lazy">
             </div>

@@ -3,11 +3,20 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\PaymentSetting;
+use Illuminate\Support\Facades\Storage;
 
 class VietQrCodeGenerator
 {
     public function imageUrl(Order $order): ?string
     {
+        // First check if there's an uploaded QR image from admin settings
+        $paymentSetting = PaymentSetting::query()->first();
+        if ($paymentSetting && $paymentSetting->qr_image_path) {
+            return Storage::url($paymentSetting->qr_image_path);
+        }
+
+        // Fall back to VietQR API if no uploaded image
         if (
             blank($order->payment_bank_code)
             || blank($order->payment_account_number)

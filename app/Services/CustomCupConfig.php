@@ -48,7 +48,9 @@ class CustomCupConfig
         $variants = CustomCupVariant::query()
             ->ordered(includeInactive: true)
             ->get();
-        $icons = CustomCupIcon::query()->ordered()->pluck('glyph')->all();
+
+        // Always use icons from config file (stored in base code, not database)
+        $icons = array_values((array) config('store.custom_cup.icons', []));
 
         $variantMap = [];
 
@@ -60,10 +62,6 @@ class CustomCupConfig
                 'is_active' => $variant->is_active,
                 'sort_order' => $variant->sort_order,
             ];
-        }
-
-        if ($icons === []) {
-            $icons = array_values((array) config('store.custom_cup.icons', []));
         }
 
         if ($variantMap === []) {

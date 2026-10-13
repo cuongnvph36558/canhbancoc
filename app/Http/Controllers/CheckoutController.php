@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\NewOrderCreated;
 use App\Models\Order;
+use App\Models\PaymentSetting;
 use App\Models\Product;
 use App\Services\ShoppingCart;
 use App\Services\VietQrCodeGenerator;
@@ -39,10 +40,20 @@ class CheckoutController extends Controller
             ];
         })->values();
 
+        $paymentSetting = PaymentSetting::query()->first();
+        $bankTransferEnabled = $paymentSetting?->isReadyForCheckout();
+
         return view('store.checkout', [
             'items' => $items,
             'subtotal' => $items->sum('line_total'),
             'shippingFee' => $items->sum('line_total') >= 300000 ? 0 : 30000,
+            'bankTransferEnabled' => $bankTransferEnabled,
+            'bankInfo' => $bankTransferEnabled ? [
+                'bank_code' => $paymentSetting->bank_code,
+                'bank_name' => $paymentSetting->bank_name,
+                'account_number' => $paymentSetting->account_number,
+                'account_name' => $paymentSetting->account_name,
+            ] : null,
         ]);
     }
 
@@ -60,11 +71,14 @@ class CheckoutController extends Controller
                 'string',
                 Rule::in([
                     Order::PAYMENT_METHOD_COD,
+                    Order::PAYMENT_METHOD_BANK_QR,
                 ]),
             ],
         ]);
 
         $paymentMethod = $validated['payment_method'] ?? Order::PAYMENT_METHOD_COD;
+
+        $paymentSetting = PaymentSetting::query()->first();
 
         $cart = $request->session()->get('cart', []);
 
@@ -72,7 +86,7 @@ class CheckoutController extends Controller
             return to_route('cart.index')->withErrors(['cart' => 'Giỏ hàng của bạn hiện đang trống.']);
         }
 
-        $order = DB::transaction(function () use ($cart, $validated, $request, $shoppingCart, $paymentMethod): Order {
+        $order = DB::transaction(function () use ($cart, $validated, $request, $shoppingCart, $paymentMethod, $paymentSetting): Order {
             $products = Product::query()
                 ->whereKey(array_keys($cart))
                 ->where('is_active', true)
@@ -102,6 +116,7 @@ class CheckoutController extends Controller
             }
 
             $shippingFee = $subtotal >= 300000 ? 0 : 30000;
+            $isBankQr = $paymentMethod === Order::PAYMENT_METHOD_BANK_QR;
             $order = Order::query()->create([
                 'user_id' => $request->user()->id,
                 'order_number' => Str::upper(Str::random(24)),
@@ -117,10 +132,10 @@ class CheckoutController extends Controller
                 'order_status' => Order::STATUS_PENDING,
                 'payment_status' => Order::PAYMENT_PENDING,
                 'payment_method' => $paymentMethod,
-                'payment_bank_code' => null,
-                'payment_bank_name' => null,
-                'payment_account_number' => null,
-                'payment_account_name' => null,
+                'payment_bank_code' => $isBankQr && $paymentSetting ? $paymentSetting->bank_code : null,
+                'payment_bank_name' => $isBankQr && $paymentSetting ? $paymentSetting->bank_name : null,
+                'payment_account_number' => $isBankQr && $paymentSetting ? $paymentSetting->account_number : null,
+                'payment_account_name' => $isBankQr && $paymentSetting ? $paymentSetting->account_name : null,
                 'payment_qr_image_path' => null,
                 'inventory_reserved' => true,
                 'expires_at' => null,

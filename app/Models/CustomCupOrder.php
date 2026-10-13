@@ -23,7 +23,7 @@ class CustomCupOrder extends Model
         'discount_percentage',
         'total_amount',
         'design',
-        'artwork_path',
+        'artwork_paths',
         'preview_path',
         'status',
     ];
@@ -32,6 +32,7 @@ class CustomCupOrder extends Model
     {
         return [
             'design' => 'array',
+            'artwork_paths' => 'array',
             'quantity' => 'integer',
             'unit_price' => 'integer',
             'discount_percentage' => 'integer',

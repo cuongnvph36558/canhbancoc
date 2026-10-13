@@ -104,14 +104,15 @@
                         <h2 id="cup-content-heading"><span>2.</span> Thêm nội dung</h2>
                         <div class="cup-content-actions">
                             <button class="cup-editor-secondary-button" type="button" data-add-text>＋ Thêm chữ</button>
-                            <label class="cup-editor-secondary-button cup-upload-button" for="cup-artwork">▧ Tải ảnh lên</label>
+                            <label class="cup-editor-secondary-button cup-upload-button" for="cup-artwork">▧ Thêm ảnh</label>
                             <input
                                 class="cup-artwork-input"
                                 id="cup-artwork"
-                                name="artwork"
+                                name="artwork[]"
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 data-artwork-input
+                                multiple
                             >
                         </div>
                         <p class="cup-upload-caption" data-upload-caption>JPG, PNG hoặc WEBP · Tối đa 5 MB</p>

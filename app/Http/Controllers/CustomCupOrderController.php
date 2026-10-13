@@ -28,11 +28,11 @@ class CustomCupOrderController extends Controller
         $discountPercentage = $quantity >= (int) $customCup['bulk_discount_minimum']
             ? (int) $customCup['bulk_discount_percentage']
             : 0;
-        $artworkPath = null;
+        $artworkPaths = [];
         $previewPath = null;
 
         try {
-            $order = DB::transaction(function () use ($request, $validated, $quantity, $customCup, $unitPrice, $discountPercentage, &$artworkPath, &$previewPath): CustomCupOrder {
+            $order = DB::transaction(function () use ($request, $validated, $quantity, $customCup, $unitPrice, $discountPercentage, &$artworkPaths, &$previewPath): CustomCupOrder {
                 $order = CustomCupOrder::create([
                     'user_id' => $request->user()?->id,
                     'order_number' => 'CM-'.now()->format('ymd').'-'.Str::upper(Str::random(7)),
@@ -52,14 +52,22 @@ class CustomCupOrderController extends Controller
                     'status' => 'pending',
                 ]);
 
+                // Handle multiple artwork files
                 if ($request->hasFile('artwork')) {
-                    $artworkPath = $request->file('artwork')->store('custom-cup-artwork', 'local');
+                    $files = $request->file('artwork');
+                    $artworkPaths = [];
 
-                    if ($artworkPath === false) {
-                        throw new RuntimeException('Không thể lưu hình in của đơn hàng.');
+                    foreach ($files as $index => $file) {
+                        $artworkPath = $file->store('custom-cup-artwork', 'local');
+
+                        if ($artworkPath === false) {
+                            throw new RuntimeException("Không thể lưu hình in số {$index} của đơn hàng.");
+                        }
+
+                        $artworkPaths[] = $artworkPath;
                     }
 
-                    $order->update(['artwork_path' => $artworkPath]);
+                    $order->update(['artwork_paths' => $artworkPaths]);
                 }
 
                 if (! empty($validated['design_preview'])) {
@@ -89,7 +97,7 @@ class CustomCupOrderController extends Controller
                 return $order;
             });
         } catch (Throwable $exception) {
-            foreach (array_filter([$artworkPath, $previewPath]) as $path) {
+            foreach (array_filter([...$artworkPaths, $previewPath]) as $path) {
                 Storage::disk('local')->delete($path);
             }
 

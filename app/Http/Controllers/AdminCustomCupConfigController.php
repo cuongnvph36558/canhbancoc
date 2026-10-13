@@ -25,7 +25,7 @@ class AdminCustomCupConfigController extends Controller
             'variants' => CustomCupVariant::query()
                 ->ordered(includeInactive: true)
                 ->get(),
-            'icons' => CustomCupIcon::query()->ordered()->get(),
+            'icons' => config('store.custom_cup.icons', []),
             'previewConfig' => $this->config->all(),
         ]);
     }

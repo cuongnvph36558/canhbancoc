@@ -36,7 +36,9 @@ class StoreCustomCupOrderRequest extends FormRequest
             'design.items.*.y' => ['required', 'numeric', 'min:0', 'max:100'],
             'design.items.*.width' => ['required', 'numeric', 'min:12', 'max:80'],
             'design.items.*.font_size' => ['sometimes', 'numeric', 'min:50', 'max:200'],
-            'artwork' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=4000,max_height=4000'],
+            'design.items.*.image_index' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:19'],
+            'artwork' => ['nullable', 'array', 'min:1', 'max:10'],
+            'artwork.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=4000,max_height=4000'],
         ];
     }
 
@@ -66,6 +68,13 @@ class StoreCustomCupOrderRequest extends FormRequest
 
                         if (($item['content'] ?? null) !== 'artwork') {
                             $validator->errors()->add("design.items.{$index}.content", 'Hình in được chọn không hợp lệ.');
+                        }
+
+                        // Validate image_index is within range of uploaded files
+                        $imageIndex = $item['image_index'] ?? 0;
+                        $uploadedFiles = $this->file('artwork', []);
+                        if ($imageIndex >= count($uploadedFiles)) {
+                            $validator->errors()->add("design.items.{$index}.image_index", "Hình in số {$imageIndex} không tồn tại trong danh sách ảnh đã tải lên.");
                         }
                     }
                 }

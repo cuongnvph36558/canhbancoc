@@ -163,34 +163,14 @@
         </div>
 
         <div class="admin-icon-grid">
-            @forelse ($icons as $icon)
+            @foreach ($icons as $icon)
                 <div class="admin-icon-cell">
-                    <span class="admin-icon-glyph" aria-hidden="true">{{ $icon->glyph }}</span>
-                    <form method="POST" action="{{ route('admin.custom-cup-config.icons.destroy', $icon) }}" onsubmit="return confirm('Xóa biểu tượng {{ $icon->glyph }}?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="admin-action-button is-danger">Xóa</button>
-                    </form>
+                    <span class="admin-icon-glyph" aria-hidden="true">{{ $icon }}</span>
                 </div>
-            @empty
-                <p class="admin-empty-state">Chưa có biểu tượng nào.</p>
-            @endforelse
+            @endforeach
         </div>
 
-        <form class="admin-config-add-form" method="POST" action="{{ route('admin.custom-cup-config.icons.store') }}">
-            @csrf
-            <h3>Thêm biểu tượng mới</h3>
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label for="icon-glyph">Ký tự biểu tượng <span class="admin-required">*</span></label>
-                    <input type="text" id="icon-glyph" name="glyph" value="{{ old('glyph') }}" maxlength="16" required placeholder="VD: 💗 hoặc ❤">
-                    <small>Có thể dùng emoji hoặc ký tự Unicode bất kỳ (tối đa 16 ký tự).</small>
-                </div>
-            </div>
-            <div class="admin-form-actions">
-                <button type="submit" class="admin-btn-primary">Thêm biểu tượng</button>
-            </div>
-        </form>
+        <p class="admin-hint">Danh sách icon được lưu trong code <code>config/store.php</code>. Để thêm icon mới, hãy chỉnh sửa file config.</p>
     </section>
 
     <section class="admin-products-panel" aria-labelledby="preview-heading">
@@ -375,5 +355,14 @@
     text-align: center;
     color: #8a9dad;
     font-size: 12px;
+}
+
+.admin-hint {
+    padding: 12px 16px;
+    background: #f5f8fa;
+    border-radius: 8px;
+    color: #6b7c8a;
+    font-size: 13px;
+    margin-top: 12px;
 }
 </style>
