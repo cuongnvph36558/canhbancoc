@@ -27,24 +27,8 @@
     "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
     "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
   },
-  "node_modules/@huggingface/transformers/dist/transformers.web.js": {
-    "file": "assets/transformers.web-D9Xt5fBf.js",
-    "name": "transformers.web",
-    "src": "node_modules/@huggingface/transformers/dist/transformers.web.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js"
-    ],
-    "assets": [
-      "assets/ort-wasm-simd-threaded.asyncify-CxOG5pUO.wasm"
-    ]
-  },
-  "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm": {
-    "file": "assets/ort-wasm-simd-threaded.asyncify-CxOG5pUO.wasm",
-    "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-CbMM8uaP.css",
+    "file": "assets/app-BYn4pOl5.css",
     "name": "app",
     "names": [
       "app.css"
@@ -53,14 +37,20 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-00c-vLto.js",
+    "file": "assets/app-ChBunf_l.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/vietnam-addresses.js",
-      "node_modules/@huggingface/transformers/dist/transformers.web.js"
+      "resources/js/customizer.js"
     ]
+  },
+  "resources/js/customizer.js": {
+    "file": "assets/customizer-D6EzmE-X.js",
+    "name": "customizer",
+    "src": "resources/js/customizer.js",
+    "isDynamicEntry": true
   },
   "resources/js/vietnam-addresses.js": {
     "file": "assets/vietnam-addresses-gXb6HGmM.js",

@@ -958,9 +958,37 @@ body.cup-storefront.cup-storefront.cup-storefront .cup-designer-errors { padding
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-errors strong { display: block; }
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-errors ul { margin: 6px 0 0; padding-left: 20px; }
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: start; }
-body.cup-storefront.cup-storefront.cup-storefront .cup-designer-preview-card { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--csp-white); border: 1px solid var(--csp-line); border-radius: var(--csp-radius-lg); box-shadow: 0 14px 40px rgba(124, 70, 145, .1); }
-body.cup-storefront.cup-storefront.cup-storefront .cup-designer-preview-stage { position: relative; aspect-ratio: 4/3; background: var(--csp-cream); border-radius: var(--csp-radius); overflow: hidden; display: grid; place-items: center; }
-body.cup-storefront.cup-storefront.cup-storefront .cup-designer-mug { width: 80%; max-width: 360px; height: auto; }
+body.cup-storefront.cup-storefront.cup-storefront .cup-designer-preview-card {
+    position: sticky; top: 100px; display: flex; flex-direction: column; gap: 12px;
+    padding: 20px; background: var(--csp-white);
+    border: 1px solid var(--csp-line); border-radius: var(--csp-radius-lg);
+    box-shadow: 0 14px 40px rgba(124, 70, 145, .1);
+}
+body.cup-storefront.cup-storefront.cup-storefront .cup-designer-preview-stage {
+    position: relative; background: var(--csp-cream); border-radius: var(--csp-radius);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    /* Để stage tự co theo kích thuoc mug — 1/1 aspect ratio lam base, max-height gioi han */
+    aspect-ratio: 1 / 1;
+    min-height: 280px; max-height: 480px;
+}
+body.cup-storefront.cup-storefront.cup-storefront .cup-designer-mug {
+    position: absolute; height: 90%; width: auto; max-width: 85%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1; pointer-events: none; user-select: none;
+}
+body.cup-storefront.cup-storefront.cup-storefront .cup-print-canvas {
+    position: absolute !important;
+    /* SVG 600x600 viewBox: body x=130→470 (57% w), y=160→562 (67% h)
+       Trong stage 1/1 voi mug 90% height: canvas chiem 57% x 90% ≈ 51% stage width */
+    width: 51% !important; height: 60.3% !important;
+    /* Can giua: (100% - 51%) / 2 = 24.5%, top = (100% - 60.3%) / 2 ≈ 19.9% */
+    left: 24.5% !important; top: 19.9% !important;
+    z-index: 2; cursor: crosshair; border-radius: 8px !important;
+    outline: 2px dashed rgba(255, 111, 165, .5) !important;
+    outline-offset: -2px;
+    background: rgba(255, 111, 165, .05) !important;
+}
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-mug .cup-mug-body { fill: var(--cup-body-color, #f5f5f5); }
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-mug .cup-mug-handle { fill: var(--cup-handle-color, #e0e0e0); }
 body.cup-storefront.cup-storefront.cup-storefront .cup-designer-mug .cup-mug-rim { fill: var(--cup-rim-color, #fafafa); }

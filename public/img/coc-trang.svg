@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" preserveAspectRatio="xMidYMid meet">
+    <defs>
+        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#dcd9d2"/>
+            <stop offset="40%" stop-color="#fdfdfb"/>
+            <stop offset="65%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#dcd9d2"/>
+        </linearGradient>
+        <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#e8e5dd"/>
+            <stop offset="50%" stop-color="#fdfdfb"/>
+            <stop offset="100%" stop-color="#d8d5cc"/>
+        </linearGradient>
+        <radialGradient id="rimGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ecebe7"/>
+            <stop offset="80%" stop-color="#d4d2cb"/>
+            <stop offset="100%" stop-color="#b8b5ad"/>
+        </radialGradient>
+    </defs>
+    <ellipse cx="300" cy="565" rx="190" ry="14" fill="rgba(0,0,0,0.18)"/>
+    <path d="M 440 195 C 540 195, 555 290, 555 320 C 555 350, 540 445, 440 445 L 440 405 C 510 405, 520 350, 520 320 C 520 290, 510 235, 440 235 Z" fill="url(#handleGrad)" stroke="rgba(0,0,0,0.08)" stroke-width="2"/>
+    <path d="M 130 160 L 470 160 L 458 510 C 456 545, 432 562, 400 562 L 200 562 C 168 562, 144 545, 142 510 Z" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.06)" stroke-width="2"/>
+    <ellipse cx="300" cy="160" rx="170" ry="22" fill="url(#rimGrad)" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+    <ellipse cx="300" cy="160" rx="158" ry="16" fill="#ccc9c0"/>
+    <path d="M 165 200 Q 175 380, 195 530" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 200 180 Q 205 350, 215 520" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="6" stroke-linecap="round"/>
+</svg>

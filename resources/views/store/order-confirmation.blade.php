@@ -57,12 +57,12 @@
                         $order->payment_method === \App\Models\Order::PAYMENT_METHOD_BANK_QR
                         && $order->payment_status === \App\Models\Order::PAYMENT_PENDING
                         && $order->order_status !== \App\Models\Order::STATUS_CANCELLED
-                        && ($bankQrImageUrl || $order->payment_qr_image_path)
+                        && $bankQrImageUrl
                     )
                         <div class="order-payment-qr">
                             <span>Quét mã QR để chuyển khoản</span>
                             <img
-                                src="{{ $bankQrImageUrl ?? \Illuminate\Support\Facades\Storage::disk('public')->url($order->payment_qr_image_path) }}"
+                                src="{{ $bankQrImageUrl }}"
                                 alt="Mã QR thanh toán ngân hàng"
                             >
                             <strong>{{ $order->payment_bank_name }} · {{ $order->payment_account_number }}</strong>

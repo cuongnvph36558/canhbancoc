@@ -5,13 +5,14 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCustomCupConfigController;
 use App\Http\Controllers\AdminCustomCupOrderController;
 use App\Http\Controllers\AdminOrderController;
-use App\Http\Controllers\AdminPaymentSettingController;
 use App\Http\Controllers\AdminPageContentController;
+use App\Http\Controllers\AdminPaymentSettingController;
 use App\Http\Controllers\AdminProductCategoryController;
 use App\Http\Controllers\AdminProductReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CustomCupCartController;
 use App\Http\Controllers\CustomCupOrderController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\ProductController;
@@ -28,6 +29,9 @@ Route::get('/product-images/{productImage}', ProductImageController::class)
 Route::get('/', [StoreController::class, 'home'])->name('home');
 Route::get('/san-pham', [StoreController::class, 'products'])->name('products.index');
 Route::get('/danh-muc/{slug}', [StoreController::class, 'category'])->name('products.category');
+Route::get('/gio-hang/coc-tu-custom', [CustomCupCartController::class, 'index'])->name('custom-cup-cart.index');
+Route::post('/gio-hang-coc-tu-custom', [CustomCupCartController::class, 'store'])->name('custom-cup-cart.store');
+Route::delete('/gio-hang/coc-tu-custom/{id}', [CustomCupCartController::class, 'destroy'])->name('custom-cup-cart.destroy');
 Route::get('/coc-tu-custom', [StoreController::class, 'customizer'])->name('products.customize');
 Route::post('/dat-hang/coc-tu-custom', [CustomCupOrderController::class, 'store'])->name('custom-cup-orders.store');
 Route::get('/dat-hang/coc-tu-custom/{order}/preview', [CustomCupOrderController::class, 'preview'])->name('custom-cup-orders.preview');
@@ -102,7 +106,6 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/thanh-toan', [AdminPaymentSettingController::class, 'edit'])->name('admin.payment-settings.edit');
         Route::put('/admin/thanh-toan', [AdminPaymentSettingController::class, 'update'])->name('admin.payment-settings.update');
-        Route::delete('/admin/thanh-toan/qr-image', [AdminPaymentSettingController::class, 'deleteQrImage'])->name('admin.payment-settings.delete-qr-image');
 
         Route::get('/admin/san-pham', [ProductController::class, 'index'])->name('admin.products.index');
         Route::get('/admin/san-pham/tao-moi', [ProductController::class, 'create'])->name('admin.products.create');
