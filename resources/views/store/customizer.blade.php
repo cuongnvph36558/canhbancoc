@@ -164,8 +164,10 @@
                         </div>
                     </div>
                     <div class="cup-order-actions">
-                        <button class="cup-order-secondary" type="button" data-add-to-cart>Thêm vào giỏ</button>
-                        <button class="cup-order-primary" type="button" data-open-order>Đặt hàng</button>
+                        <button class="cup-buy-now" type="button" data-open-order>
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            Mua ngay
+                        </button>
                     </div>
                 </div>
             </section>
@@ -188,6 +190,7 @@
                 @csrf
                 <div data-design-fields></div>
                 <input type="hidden" name="cup_variant" data-selected-variant>
+                <input type="hidden" name="quantity" data-quantity>
                 <input type="hidden" name="design_preview" value="" data-design-preview>
                 <label>Họ và tên<input type="text" name="customer_name" value="{{ old('customer_name', auth()->user()?->name) }}" autocomplete="name" required maxlength="120" placeholder="Tên người nhận"></label>
                 <label>Số điện thoại<input type="tel" name="customer_phone" value="{{ old('customer_phone', auth()->user()?->phone) }}" autocomplete="tel" required minlength="8" maxlength="30" placeholder="09xx xxx xxx"></label>

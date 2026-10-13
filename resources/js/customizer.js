@@ -609,6 +609,9 @@ if (cupDesigner) {
             showToast('Hãy thêm ít nhất 1 phần tử (chữ, biểu tượng hoặc ảnh) trước khi đặt.');
             return;
         }
+        const c = calc();
+        const qtyInput = document.querySelector('[data-quantity]');
+        if (qtyInput) qtyInput.value = c.q;
         renderModalPreview();
         modal.hidden = false;
         if (window.initVietnamAddressFields) window.initVietnamAddressFields();
