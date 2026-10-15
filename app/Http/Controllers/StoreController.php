@@ -196,6 +196,7 @@ class StoreController extends Controller
                     'colors' => $product->colors->map(fn ($color): array => [
                         'name' => $color->name,
                         'hex_code' => $color->hex_code,
+                        'has_hex' => $color->hasHex(),
                     ])->all(),
                 ];
             })

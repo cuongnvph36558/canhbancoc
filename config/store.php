@@ -90,6 +90,8 @@ return [
     'custom_cup' => [
         'unit_price' => 89000,
         'size' => '11oz',
+        'print_area_width_mm' => 220,
+        'print_area_height_mm' => 90,
         'bulk_discount_minimum' => 5,
         'bulk_discount_percentage' => 10,
         'variants' => [

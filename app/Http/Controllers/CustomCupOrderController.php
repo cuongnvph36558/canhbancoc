@@ -31,8 +31,9 @@ class CustomCupOrderController extends Controller
         $artworkPaths = [];
         $previewPath = null;
 
+        $order = null;
         try {
-            $order = DB::transaction(function () use ($request, $validated, $quantity, $customCup, $unitPrice, $discountPercentage, &$artworkPaths, &$previewPath): CustomCupOrder {
+            $order = DB::transaction(function () use ($request, $validated, $quantity, $customCup, $unitPrice, $discountPercentage, &$previewPath): CustomCupOrder {
                 $order = CustomCupOrder::create([
                     'user_id' => $request->user()?->id,
                     'order_number' => 'CM-'.now()->format('ymd').'-'.Str::upper(Str::random(7)),
@@ -51,24 +52,6 @@ class CustomCupOrderController extends Controller
                     'design' => $validated['design'],
                     'status' => 'pending',
                 ]);
-
-                // Handle multiple artwork files
-                if ($request->hasFile('artwork')) {
-                    $files = $request->file('artwork');
-                    $artworkPaths = [];
-
-                    foreach ($files as $index => $file) {
-                        $artworkPath = $file->store('custom-cup-artwork', 'local');
-
-                        if ($artworkPath === false) {
-                            throw new RuntimeException("Không thể lưu hình in số {$index} của đơn hàng.");
-                        }
-
-                        $artworkPaths[] = $artworkPath;
-                    }
-
-                    $order->update(['artwork_paths' => $artworkPaths]);
-                }
 
                 if (! empty($validated['design_preview'])) {
                     $previewData = preg_replace('/^data:image\/\w+;base64,/', '', $validated['design_preview']);
@@ -97,11 +80,35 @@ class CustomCupOrderController extends Controller
                 return $order;
             });
         } catch (Throwable $exception) {
-            foreach (array_filter([...$artworkPaths, $previewPath]) as $path) {
-                Storage::disk('local')->delete($path);
+            // Xoá preview nếu đã lưu lên đĩa (vì DB update đã rollback).
+            if ($previewPath !== null && Storage::disk('local')->exists($previewPath)) {
+                Storage::disk('local')->delete($previewPath);
             }
 
             throw $exception;
+        }
+
+        // Lưu artwork SAU khi order đã chắc chắn tạo thành công.
+        // Làm ngoài transaction để đảm bảo: nếu phần này lỗi thì artwork không bị mồ côi,
+        // mà order vẫn được tạo (admin có thể yêu cầu khách gửi lại ảnh).
+        if ($request->hasFile('artwork')) {
+            $files = $request->file('artwork');
+
+            foreach ($files as $index => $file) {
+                $artworkPath = $file->store('custom-cup-artwork', 'local');
+
+                if ($artworkPath === false) {
+                    report(new RuntimeException("Không thể lưu hình in số {$index} của đơn hàng {$order->order_number}."));
+
+                    continue;
+                }
+
+                $artworkPaths[] = $artworkPath;
+            }
+
+            if (! empty($artworkPaths)) {
+                $order->update(['artwork_paths' => $artworkPaths]);
+            }
         }
 
         NewOrderCreated::dispatch(

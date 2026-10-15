@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/don-hang-coc-tu-custom/{order}', [AdminCustomCupOrderController::class, 'show'])->name('admin.custom-cup-orders.show');
         Route::patch('/admin/don-hang-coc-tu-custom/{order}/trang-thai', [AdminCustomCupOrderController::class, 'updateStatus'])->name('admin.custom-cup-orders.update-status');
         Route::get('/admin/don-hang-coc-tu-custom/{order}/preview', [AdminCustomCupOrderController::class, 'preview'])->name('admin.custom-cup-orders.preview');
+        Route::get('/admin/don-hang-coc-tu-custom/{order}/in', [AdminCustomCupOrderController::class, 'print'])->name('admin.custom-cup-orders.print');
         Route::get('/admin/don-hang-coc-tu-custom/{order}/hinh-in', [AdminCustomCupOrderController::class, 'downloadArtwork'])->name('admin.custom-cup-orders.artwork');
 
         Route::get('/admin/coc-custom', [AdminCustomCupConfigController::class, 'edit'])->name('admin.custom-cup-config.edit');

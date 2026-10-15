@@ -38,6 +38,12 @@ if (cupDesigner) {
     const imageLayersSection = cupDesigner.querySelector('[data-image-layers]');
     const imageLayersList = cupDesigner.querySelector('[data-image-layers-list]');
 
+    // Upload preview refs (hiển thị ảnh đã chọn ngay cho khách thấy)
+    const uploadPreviewSection = cupDesigner.querySelector('[data-upload-preview]');
+    const uploadPreviewGrid = cupDesigner.querySelector('[data-upload-preview-grid]');
+    const uploadPreviewCount = cupDesigner.querySelector('[data-upload-preview-count]');
+    const uploadPreviewClear = cupDesigner.querySelector('[data-upload-preview-clear]');
+
     const quantityInput = cupDesigner.querySelector('[data-cup-quantity]');
     const cupTypeInput = cupDesigner.querySelector('[data-cup-type]');
     const orderTotal = cupDesigner.querySelector('[data-cup-order-total]');
@@ -353,6 +359,7 @@ if (cupDesigner) {
             uploadCaption.textContent = `${artworkFiles.length} ảnh đã chọn`;
         }
         renderImageLayerChips();
+        renderUploadPreview();
         // Auto layout multiple images into grid
         if (added.length > 1) layoutImageLayers();
         const messages = [];
@@ -572,6 +579,96 @@ if (cupDesigner) {
             imageLayersList.appendChild(chip);
         });
     }
+
+    // Render upload preview thumbnails (visible immediately after upload)
+    function renderUploadPreview() {
+        if (!uploadPreviewSection || !uploadPreviewGrid) return;
+        uploadPreviewGrid.replaceChildren();
+        const count = artworkFiles.length;
+        uploadPreviewSection.hidden = count === 0;
+        if (uploadPreviewCount) uploadPreviewCount.textContent = String(count);
+
+        artworkFiles.forEach((data, idx) => {
+            const item = document.createElement('div');
+            item.className = 'cup-upload-preview-item';
+
+            const img = document.createElement('img');
+            img.src = data.origUrl;
+            img.alt = data.name || `Ảnh ${idx + 1}`;
+            img.loading = 'lazy';
+
+            const meta = document.createElement('div');
+            meta.className = 'cup-upload-preview-meta';
+            const name = document.createElement('span');
+            name.className = 'cup-upload-preview-name';
+            name.textContent = data.name || `Ảnh ${idx + 1}`;
+            name.title = data.name || `Ảnh ${idx + 1}`;
+            const sizeKb = data.file ? Math.round(data.file.size / 1024) : 0;
+            const size = document.createElement('span');
+            size.className = 'cup-upload-preview-size';
+            size.textContent = sizeKb > 0 ? `${sizeKb} KB` : '';
+            meta.append(name, size);
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'cup-upload-preview-remove';
+            remove.setAttribute('aria-label', `Xóa ${data.name || `Ảnh ${idx + 1}`}`);
+            remove.title = 'Xóa ảnh này';
+            remove.textContent = '×';
+            remove.addEventListener('click', () => removeUploadPreviewItem(idx));
+
+            item.append(img, meta, remove);
+            uploadPreviewGrid.appendChild(item);
+        });
+    }
+
+    // Remove a single artwork from the upload preview
+    function removeUploadPreviewItem(idx) {
+        // Remove the corresponding artwork data and any layer that uses it
+        const data = artworkFiles[idx];
+        if (data?.origUrl) URL.revokeObjectURL(data.origUrl);
+        artworkFiles.splice(idx, 1);
+        // Update layers that reference the removed image_index
+        layers = layers.filter((l) => {
+            if (l.type === 'image' && l.image_index === idx) return false;
+            return true;
+        });
+        layers.forEach((l) => {
+            if (l.type === 'image' && l.image_index != null && l.image_index > idx) l.image_index--;
+        });
+        nextImageIndex = Math.max(0, nextImageIndex - 1);
+        sel = null;
+
+        // Update caption
+        if (artworkFiles.length === 0) {
+            uploadCaption.textContent = 'JPG, PNG hoặc WEBP · Tối đa 5 MB';
+        } else {
+            uploadCaption.textContent = `${artworkFiles.length} ảnh đã chọn`;
+        }
+
+        syncUI();
+        renderUploadPreview();
+        renderImageLayerChips();
+        requestRender();
+    }
+
+    // Clear all uploaded artworks
+    function clearAllUploadPreview() {
+        artworkFiles.forEach((data) => {
+            if (data?.origUrl) URL.revokeObjectURL(data.origUrl);
+        });
+        artworkFiles = [];
+        layers = layers.filter((l) => l.type !== 'image');
+        sel = null;
+        nextImageIndex = 0;
+        uploadCaption.textContent = 'JPG, PNG hoặc WEBP · Tối đa 5 MB';
+        if (artworkInput) artworkInput.value = '';
+        syncUI();
+        renderUploadPreview();
+        renderImageLayerChips();
+        requestRender();
+    }
+    uploadPreviewClear?.addEventListener('click', clearAllUploadPreview);
 
     // --- Price calc
     function calc() {

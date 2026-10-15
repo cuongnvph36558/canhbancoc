@@ -9997,13 +9997,7 @@ body.cup-homepage {
     }
 }
 
-.storefront-quick-actions {
-        width: calc(100% - 28px);
-        padding-top: 35px;
-        padding-bottom: 48px;
-    }
-
-    .chat-transcript {
+.chat-transcript {
         min-height: 240px;
         padding: 16px 12px;
     }

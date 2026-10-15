@@ -119,6 +119,20 @@ class AdminCustomCupOrderController extends Controller
         ]);
     }
 
+    public function print(CustomCupOrder $order, CustomCupOrderPreview $preview, CustomCupConfig $config): View
+    {
+        $configData = $config->all();
+        $printAreaWidthMm = (int) ($configData['print_area_width_mm'] ?? 220);
+        $printAreaHeightMm = (int) ($configData['print_area_height_mm'] ?? 90);
+
+        return view('admin.custom-cup-orders.print', [
+            'order' => $order,
+            'previewSvg' => $preview->render($order, $printAreaWidthMm, $printAreaHeightMm),
+            'printAreaWidthMm' => $printAreaWidthMm,
+            'printAreaHeightMm' => $printAreaHeightMm,
+        ]);
+    }
+
     public function downloadArtwork(Request $request, CustomCupOrder $order): StreamedResponse
     {
         $artworkPaths = $order->artwork_paths ?? ($order->artwork_path ? [$order->artwork_path] : []);

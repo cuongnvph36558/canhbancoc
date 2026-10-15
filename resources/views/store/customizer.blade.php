@@ -1,5 +1,142 @@
 @extends('layouts.store')
 
+@push('styles')
+<style>
+/* === Upload preview (hiển thị ảnh đã chọn ngay cho khách thấy) === */
+body.cup-customizer-canvas .cup-upload-preview,
+.cup-upload-preview {
+    display: block !important;
+    margin-top: 12px !important;
+    padding: 12px !important;
+    background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%) !important;
+    border: 2px dashed #f0abfc !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+body.cup-customizer-canvas .cup-upload-preview[hidden],
+.cup-upload-preview[hidden] {
+    display: none !important;
+}
+.cup-upload-preview-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+.cup-upload-preview-title {
+    font-weight: 600 !important;
+    color: #831843 !important;
+    font-size: 14px !important;
+}
+.cup-upload-preview-clear {
+    background: transparent !important;
+    border: 1px solid #f0abfc !important;
+    color: #be185d !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: inline-block !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+}
+.cup-upload-preview-clear:hover {
+    background: #fce7f3 !important;
+    border-color: #be185d !important;
+}
+.cup-upload-preview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.cup-upload-preview-item {
+    position: relative !important;
+    background: #fff !important;
+    border: 2px solid #fce7f3 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    transition: all 0.2s ease !important;
+    list-style: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    aspect-ratio: 4 / 3 !important;
+    box-sizing: border-box !important;
+}
+.cup-upload-preview-item:hover {
+    border-color: #f0abfc !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(244, 114, 182, 0.15) !important;
+}
+.cup-upload-preview-item img {
+    display: block !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    background: #f9fafb !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+.cup-upload-preview-meta {
+    padding: 6px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+.cup-upload-preview-name {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: block !important;
+}
+.cup-upload-preview-size {
+    font-size: 10px !important;
+    color: #9ca3af !important;
+    display: block !important;
+}
+.cup-upload-preview-remove {
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    background: rgba(239, 68, 68, 0.95) !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+}
+.cup-upload-preview-remove:hover {
+    background: #dc2626 !important;
+    transform: scale(1.1) !important;
+}
+</style>
+@endpush
+
 @section('title', 'Thiết kế cốc của bạn')
 @section('description', 'Chọn mẫu cốc, thêm chữ, hình, ảnh riêng — kéo thả trực tiếp lên cốc rồi đặt hàng.')
 @section('body-class', 'cup-customizer-page cup-customizer-canvas')
@@ -86,6 +223,15 @@
                         >
                     </div>
                     <p class="cup-upload-caption" data-upload-caption>JPG, PNG hoặc WEBP · Tối đa 5 MB</p>
+
+                    {{-- Preview khu vực hiển thị hình ảnh đã chọn (cho khách thấy ngay) --}}
+                    <div class="cup-upload-preview" data-upload-preview hidden>
+                        <div class="cup-upload-preview-header">
+                            <span class="cup-upload-preview-title">Ảnh đã chọn (<span data-upload-preview-count>0</span>)</span>
+                            <button type="button" class="cup-upload-preview-clear" data-upload-preview-clear>Xóa tất cả</button>
+                        </div>
+                        <div class="cup-upload-preview-grid" data-upload-preview-grid></div>
+                    </div>
 
                     <div class="cup-icon-options" aria-label="Chọn biểu tượng">
                         @foreach ($customCup['icons'] as $icon)
@@ -219,3 +365,117 @@
 
     <div class="cup-toast" data-cup-toast role="status" aria-live="polite" hidden></div>
 @endsection
+
+<script>
+/* === Upload preview (chạy song song với file build, dùng observer) === */
+(function() {
+    function initUploadPreview() {
+        const root = document.querySelector('[data-cup-customizer]');
+        if (!root) return;
+
+        const caption = root.querySelector('[data-upload-caption]');
+        const previewSection = root.querySelector('[data-upload-preview]');
+        const previewGrid = root.querySelector('[data-upload-preview-grid]');
+        const previewCount = root.querySelector('[data-upload-preview-count]');
+        const clearBtn = root.querySelector('[data-upload-preview-clear]');
+        const artworkInput = root.querySelector('[data-artwork-input]');
+
+        if (!caption || !previewSection || !previewGrid) return;
+
+        // Render previews for any files currently selected in the input.
+        // We capture files BEFORE the build script clears them, by using
+        // addEventListener with capture:true so we run first.
+        function renderFromInput() {
+            const files = artworkInput ? Array.from(artworkInput.files || []) : [];
+            // If input is empty (cleared by build script), still try to render from last known
+            if (files.length === 0) {
+                // Don't clear the preview here — build script may have just cleared
+                // the value, but the user already saw their selection.
+                return;
+            }
+            renderFromFiles(files);
+        }
+
+        function renderFromFiles(files) {
+            previewGrid.replaceChildren();
+            const count = files.length;
+            previewSection.hidden = count === 0;
+            if (previewCount) previewCount.textContent = String(count);
+
+            files.forEach((file, idx) => {
+                if (!file.type.startsWith('image/')) return;
+                const url = URL.createObjectURL(file);
+                const item = document.createElement('div');
+                item.className = 'cup-upload-preview-item';
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = file.name || `Ảnh ${idx + 1}`;
+                img.loading = 'lazy';
+                img.onload = function() { URL.revokeObjectURL(url); };
+                const meta = document.createElement('div');
+                meta.className = 'cup-upload-preview-meta';
+                const name = document.createElement('span');
+                name.className = 'cup-upload-preview-name';
+                name.textContent = file.name || `Ảnh ${idx + 1}`;
+                name.title = file.name || `Ảnh ${idx + 1}`;
+                const size = document.createElement('span');
+                size.className = 'cup-upload-preview-size';
+                const sizeKb = Math.round(file.size / 1024);
+                size.textContent = sizeKb > 1024 ? `${(sizeKb/1024).toFixed(1)} MB` : `${sizeKb} KB`;
+                meta.append(name, size);
+                item.append(img, meta);
+                previewGrid.appendChild(item);
+            });
+        }
+
+        // Hook input change with capture phase to grab files before build script clears
+        if (artworkInput) {
+            artworkInput.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                    renderFromFiles(files);
+                } else {
+                    // No files (cleared or user cancelled) — show empty
+                    previewGrid.replaceChildren();
+                    previewSection.hidden = true;
+                    if (previewCount) previewCount.textContent = '0';
+                }
+            }, true); // capture: true to run before build script's bubble-phase listener
+        }
+
+        // Clear all: reset input value
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                if (artworkInput) artworkInput.value = '';
+                previewGrid.replaceChildren();
+                previewSection.hidden = true;
+                if (previewCount) previewCount.textContent = '0';
+            });
+        }
+
+        // Also listen to drag&drop labels
+        const labels = document.querySelectorAll('label[for="cup-artwork"]');
+        labels.forEach(function(lbl) {
+            lbl.addEventListener('click', function() {
+                // The native click on label triggers input click; nothing more needed
+            });
+        });
+
+        // Expose for testing / external triggers
+        window.cupUploadPreview = {
+            render: renderFromInput,
+            clear: function() {
+                if (artworkInput) artworkInput.value = '';
+                previewGrid.replaceChildren();
+                previewSection.hidden = true;
+                if (previewCount) previewCount.textContent = '0';
+            }
+        };
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUploadPreview);
+    } else {
+        initUploadPreview();
+    }
+})();
+</script>

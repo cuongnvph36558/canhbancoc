@@ -87,7 +87,7 @@ class ProductController extends Controller
             'is_active' => ['sometimes', 'boolean'],
             'colors' => ['nullable', 'array'],
             'colors.*.name' => ['required_with:colors', 'string', 'max:50'],
-            'colors.*.hex_code' => ['required_with:colors', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'colors.*.hex_code' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         $validated['slug'] = str()->slug($validated['name']);
@@ -184,7 +184,7 @@ class ProductController extends Controller
             'colors' => ['nullable', 'array'],
             'colors.*.id' => ['nullable', 'integer'],
             'colors.*.name' => ['required_with:colors', 'string', 'max:50'],
-            'colors.*.hex_code' => ['required_with:colors', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'colors.*.hex_code' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         $imageFiles = $request->file('images', []);
@@ -300,20 +300,21 @@ class ProductController extends Controller
     }
 
     /**
-     * @param  array<int, array{id?: int, name: string, hex_code: string}>  $colors
+     * @param  array<int, array{id?: int, name: string, hex_code?: string|null}>  $colors
      */
     private function syncProductColors(Product $product, array $colors): void
     {
         $validColors = collect($colors)
-            ->filter(fn (array $color): bool => ! empty($color['name']) && ! empty($color['hex_code']))
+            ->filter(fn (array $color): bool => ! empty($color['name']))
             ->values();
 
         $product->colors()->delete();
 
         foreach ($validColors as $color) {
+            $hex = $color['hex_code'] ?? null;
             $product->colors()->create([
                 'name' => $color['name'],
-                'hex_code' => strtoupper($color['hex_code']),
+                'hex_code' => $hex !== null ? strtoupper($hex) : null,
                 'is_active' => true,
             ]);
         }

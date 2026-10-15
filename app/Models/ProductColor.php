@@ -21,6 +21,11 @@ class ProductColor extends Model
         ];
     }
 
+    public function hasHex(): bool
+    {
+        return ! empty($this->hex_code);
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -15,6 +15,8 @@ class CustomCupConfig
      * @return array{
      *     unit_price: int,
      *     size: string,
+     *     print_area_width_mm: int,
+     *     print_area_height_mm: int,
      *     bulk_discount_minimum: int,
      *     bulk_discount_percentage: int,
      *     variants: array<string, array{name: string, handle_color: string, interior_color: string, is_active: bool, sort_order: int}>,
@@ -82,6 +84,8 @@ class CustomCupConfig
         return [
             'unit_price' => $settings->unit_price,
             'size' => $settings->size,
+            'print_area_width_mm' => (int) ($settings->print_area_width_mm ?? 220),
+            'print_area_height_mm' => (int) ($settings->print_area_height_mm ?? 90),
             'bulk_discount_minimum' => $settings->bulk_discount_minimum,
             'bulk_discount_percentage' => $settings->bulk_discount_percentage,
             'variants' => $variantMap,
@@ -112,6 +116,8 @@ class CustomCupConfig
         return [
             'unit_price' => (int) ($config['unit_price'] ?? 89000),
             'size' => (string) ($config['size'] ?? '11oz'),
+            'print_area_width_mm' => (int) ($config['print_area_width_mm'] ?? 220),
+            'print_area_height_mm' => (int) ($config['print_area_height_mm'] ?? 90),
             'bulk_discount_minimum' => (int) ($config['bulk_discount_minimum'] ?? 5),
             'bulk_discount_percentage' => (int) ($config['bulk_discount_percentage'] ?? 10),
             'variants' => $variants,

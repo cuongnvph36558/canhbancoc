@@ -91,27 +91,44 @@
             <div class="admin-form-section">
                 <h3 class="admin-form-section-title">🖼️ Hình ảnh sản phẩm</h3>
                 <div class="admin-form-group">
-                    <label for="images" class="admin-file-upload">
+                    <label for="images" class="admin-file-upload" id="imagesUploadLabel">
                         <span class="admin-file-upload-icon">📁</span>
-                        <span class="admin-file-upload-text">Chọn hình ảnh hoặc kéo thả vào đây</span>
+                        <span class="admin-file-upload-text" id="imagesUploadText">Chọn hình ảnh hoặc kéo thả vào đây</span>
                         <span class="admin-file-upload-hint">JPG, PNG, WebP • Tối đa 10 ảnh • Mỗi ảnh tối đa 5 MB</span>
                     </label>
                     <input type="file" id="images" name="images[]" accept="image/jpeg,image/png,image/webp" multiple style="display: none;">
+                    {{-- Preview khu vực hiển thị hình ảnh sau khi chọn --}}
+                    <div id="imagesPreview" class="admin-images-preview" hidden>
+                        <div class="admin-images-preview-header">
+                            <span class="admin-images-preview-title">Ảnh mới chọn (<span id="imagesPreviewCount">0</span>)</span>
+                            <button type="button" class="admin-images-clear-all" id="imagesClearAll">Xóa tất cả</button>
+                        </div>
+                        <div class="admin-image-grid" id="imagesPreviewGrid"></div>
+                    </div>
                 </div>
                 <div class="admin-form-group">
                     <label for="image_url">Hoặc dùng URL ảnh</label>
                     <input type="url" id="image_url" name="image_url" value="{{ old('image_url') }}" placeholder="https://example.com/image.jpg">
+                    {{-- Preview cho URL ảnh --}}
+                    <div id="imageUrlPreview" class="admin-url-preview" hidden>
+                        <img id="imageUrlPreviewImg" src="" alt="Preview URL">
+                        <button type="button" class="admin-url-preview-remove" id="imageUrlPreviewRemove" title="Bỏ URL">×</button>
+                    </div>
                 </div>
             </div>
 
             {{-- Màu sắc --}}
             <div class="admin-form-section">
                 <h3 class="admin-form-section-title">🎨 Màu sắc sản phẩm</h3>
-                <p class="admin-form-hint">Thêm các màu có sẵn cho sản phẩm này (nếu có).</p>
+                <p class="admin-form-hint">Thêm các loại màu có sẵn cho sản phẩm này. Có thể chỉ cần nhập tên (không bắt buộc mã màu).</p>
                 <div class="color-inputs" id="colorInputs">
                     <div class="color-row">
-                        <input type="color" name="colors[0][hex_code]" value="#000000" class="color-picker">
-                        <input type="text" name="colors[0][name]" placeholder="Tên màu (VD: Đen)" class="color-name">
+                        <input type="color" name="colors[0][hex_code]" value="#000000" class="color-picker" data-color-picker>
+                        <input type="text" name="colors[0][name]" placeholder="Tên màu (VD: Đen, Hồng pastel...)" class="color-name" required>
+                        <label class="color-no-hex-toggle" title="Bỏ mã màu, chỉ cần tên">
+                            <input type="checkbox" name="colors[0][no_hex]" value="1" data-color-no-hex onchange="toggleNoHex(this)">
+                            <span>Chỉ cần tên</span>
+                        </label>
                         <button type="button" class="color-remove-btn" onclick="removeColorRow(this)" style="visibility: hidden;" title="Xóa màu">×</button>
                     </div>
                 </div>
@@ -437,6 +454,47 @@
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
+/* "Chỉ cần tên" toggle */
+.color-no-hex-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    border: 1.5px solid #fde68a;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #92400e;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.color-no-hex-toggle:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+}
+
+.color-no-hex-toggle input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #f59e0b;
+    cursor: pointer;
+}
+
+.color-row[data-no-hex="true"] .color-picker {
+    opacity: 0.35;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.color-row[data-no-hex="true"] {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
 .color-remove-btn {
     width: 36px;
     height: 36px;
@@ -521,6 +579,190 @@
     color: #9ca3af;
 }
 
+/* Images Preview */
+.admin-images-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    margin-top: 4px;
+}
+
+.admin-images-preview[hidden],
+.admin-url-preview[hidden] {
+    display: none !important;
+}
+
+.admin-images-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-images-preview-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+}
+
+.admin-images-clear-all {
+    background: transparent;
+    border: 1.5px solid #fca5a5;
+    color: #dc2626;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-images-clear-all:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+}
+
+.admin-preview-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.admin-preview-item:hover {
+    border-color: #22c55e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.admin-preview-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.admin-preview-item-info {
+    padding: 6px 8px;
+    background: #fff;
+    border-top: 1px solid #f3f4f6;
+    font-size: 11px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-preview-item-name {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-preview-item-size {
+    display: block;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+.admin-preview-item-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.95);
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+.admin-preview-item-remove:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.admin-preview-item.is-new {
+    border-color: #22c55e;
+    border-style: dashed;
+}
+
+.admin-preview-item-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #22c55e;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* URL preview */
+.admin-url-preview {
+    position: relative;
+    display: inline-block;
+    margin-top: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    background: #fff;
+    max-width: 200px;
+}
+
+.admin-url-preview img {
+    display: block;
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+.admin-url-preview-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.95);
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+.admin-url-preview-remove:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .admin-form-row {
@@ -566,13 +808,17 @@ function addColorRow() {
     const newRow = document.createElement('div');
     newRow.className = 'color-row';
     newRow.innerHTML = `
-        <input type="color" name="colors[${colorIndex}][hex_code]" value="#000000" class="color-picker">
-        <input type="text" name="colors[${colorIndex}][name]" placeholder="Tên màu (VD: Đen)" class="color-name">
+        <input type="color" name="colors[${colorIndex}][hex_code]" value="#000000" class="color-picker" data-color-picker>
+        <input type="text" name="colors[${colorIndex}][name]" placeholder="Tên màu (VD: Đen, Hồng pastel...)" class="color-name" required>
+        <label class="color-no-hex-toggle" title="Bỏ mã màu, chỉ cần tên">
+            <input type="checkbox" name="colors[${colorIndex}][no_hex]" value="1" data-color-no-hex onchange="toggleNoHex(this)">
+            <span>Chỉ cần tên</span>
+        </label>
         <button type="button" class="color-remove-btn" onclick="removeColorRow(this)" title="Xóa màu">×</button>
     `;
     container.appendChild(newRow);
     colorIndex++;
-    
+
     // Show all remove buttons when more than 1 row
     updateRemoveButtons();
 }
@@ -590,27 +836,301 @@ function updateRemoveButtons() {
     });
 }
 
-// File upload click handler
-const fileInput = document.getElementById('images');
-const fileUploadLabel = document.querySelector('label[for="images"]');
-
-if (fileUploadLabel && fileInput) {
-    fileUploadLabel.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Click on upload label');
-        fileInput.click();
-    });
-}
-
-if (fileInput) {
-    fileInput.addEventListener('change', function(e) {
-        console.log('Files selected:', e.target.files);
-        const files = e.target.files;
-        if (files.length > 0) {
-            const uploadLabel = document.querySelector('.admin-file-upload-text');
-            uploadLabel.textContent = `Đã chọn ${files.length} ảnh`;
+function toggleNoHex(checkbox) {
+    const row = checkbox.closest('.color-row');
+    const picker = row.querySelector('[data-color-picker]');
+    if (checkbox.checked) {
+        row.setAttribute('data-no-hex', 'true');
+        if (picker) {
+            picker.dataset.previousValue = picker.value;
+            picker.value = '#000000';
         }
-    });
+    } else {
+        row.removeAttribute('data-no-hex');
+        if (picker && picker.dataset.previousValue) {
+            picker.value = picker.dataset.previousValue;
+        }
+    }
 }
+
+// Before submit: clear hex_code fields for rows marked "no_hex" so backend treats them as null
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form.admin-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            document.querySelectorAll('.color-row').forEach(function(row) {
+                const noHex = row.querySelector('[data-color-no-hex]');
+                const picker = row.querySelector('[data-color-picker]');
+                if (noHex && noHex.checked && picker) {
+                    picker.disabled = true; // disabled inputs are excluded from form submit
+                }
+            });
+        });
+    }
+});
+
+// ============================================
+// FILE UPLOAD PREVIEW - IMAGES
+// ============================================
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+    try {
+    const fileInput = document.getElementById('images');
+    const previewSection = document.getElementById('imagesPreview');
+    const previewGrid = document.getElementById('imagesPreviewGrid');
+    const previewCount = document.getElementById('imagesPreviewCount');
+    const uploadText = document.getElementById('imagesUploadText');
+    const uploadLabel = document.getElementById('imagesUploadLabel');
+    const clearAllBtn = document.getElementById('imagesClearAll');
+
+    // Store selected files
+    let selectedFiles = [];
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Create preview item HTML
+    function createPreviewItem(file, index, isFirst) {
+        const objectUrl = URL.createObjectURL(file);
+        const item = document.createElement('div');
+        item.className = 'admin-preview-item is-new';
+        item.dataset.index = index;
+        item.innerHTML = `
+            ${isFirst ? '<span class="admin-preview-item-badge">Đầu tiên</span>' : ''}
+            <img src="${objectUrl}" alt="${file.name}">
+            <div class="admin-preview-item-info">
+                <span class="admin-preview-item-name" title="${file.name}">${file.name}</span>
+                <span class="admin-preview-item-size">${formatFileSize(file.size)}</span>
+            </div>
+            <button type="button" class="admin-preview-item-remove" data-index="${index}" title="Xóa ảnh này">×</button>
+        `;
+        return item;
+    }
+
+    // Update preview section
+    function updatePreview() {
+        previewGrid.innerHTML = '';
+
+        if (selectedFiles.length === 0) {
+            previewSection.hidden = true;
+            uploadText.textContent = 'Chọn hình ảnh hoặc kéo thả vào đây';
+            uploadLabel.style.borderColor = '';
+            uploadLabel.style.background = '';
+            return;
+        }
+
+        previewSection.hidden = false;
+        previewCount.textContent = selectedFiles.length;
+        uploadText.textContent = `Đã chọn ${selectedFiles.length} ảnh (click để thêm)`;
+        uploadLabel.style.borderColor = '#22c55e';
+        uploadLabel.style.background = '#f0fdf4';
+
+        selectedFiles.forEach((file, index) => {
+            const item = createPreviewItem(file, index, index === 0);
+            previewGrid.appendChild(item);
+        });
+    }
+
+    // Handle file selection
+    function handleFileSelect(files) {
+        const newFiles = Array.from(files);
+        // Limit to 10 total
+        const remaining = 10 - selectedFiles.length;
+        if (newFiles.length > remaining) {
+            alert(`Chỉ có thể thêm tối đa 10 ảnh. Bạn đã chọn ${newFiles.length} ảnh, nhưng chỉ có thể thêm ${remaining} ảnh.`);
+            newFiles.splice(remaining);
+        }
+        selectedFiles = selectedFiles.concat(newFiles);
+
+        // Update the file input with all selected files
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+
+        updatePreview();
+    }
+
+    // Handle remove single file
+    function handleRemoveFile(index) {
+        // Revoke object URL to free memory
+        const item = previewGrid.querySelector(`[data-index="${index}"]`);
+        if (item) {
+            const img = item.querySelector('img');
+            if (img && img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+        }
+        selectedFiles.splice(index, 1);
+
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+
+        updatePreview();
+    }
+
+    // File input change
+    if (fileInput) {
+        fileInput.addEventListener('change', function (e) {
+            console.log('Files selected:', e.target.files);
+            handleFileSelect(e.target.files);
+        });
+    }
+
+    // Click on upload label - only handle clicks that don't come from the label's default behavior
+    if (uploadLabel) {
+        uploadLabel.addEventListener('click', function (e) {
+            // Don't preventDefault on label - it has for="images" which naturally opens file picker
+            // Only stop propagation to prevent double-trigger
+            e.stopPropagation();
+        });
+    }
+
+    // Clear all button
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Revoke all object URLs
+            previewGrid.querySelectorAll('img').forEach(img => {
+                if (img.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.src);
+                }
+            });
+            selectedFiles = [];
+            fileInput.value = '';
+            updatePreview();
+        });
+    }
+
+    // Remove button click (event delegation)
+    if (previewGrid) {
+        previewGrid.addEventListener('click', function (e) {
+            const removeBtn = e.target.closest('.admin-preview-item-remove');
+            if (removeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const index = parseInt(removeBtn.dataset.index, 10);
+                handleRemoveFile(index);
+            }
+        });
+    }
+
+    // Drag and drop
+    if (uploadLabel) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadLabel.addEventListener(eventName, () => {
+                uploadLabel.style.borderColor = '#22c55e';
+                uploadLabel.style.background = '#dcfce7';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadLabel.addEventListener(eventName, () => {
+                if (selectedFiles.length === 0) {
+                    uploadLabel.style.borderColor = '';
+                    uploadLabel.style.background = '';
+                }
+            }, false);
+        });
+
+        uploadLabel.addEventListener('drop', function (e) {
+            const dt = e.dataTransfer;
+            if (dt && dt.files) {
+                handleFileSelect(dt.files);
+            }
+        }, false);
+    }
+    } catch (err) {
+        console.error('[Image Preview] Initialization failed:', err);
+    }
+});
+
+// ============================================
+// URL IMAGE PREVIEW
+// ============================================
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+    try {
+    const urlInput = document.getElementById('image_url');
+    const urlPreview = document.getElementById('imageUrlPreview');
+    const urlPreviewImg = document.getElementById('imageUrlPreviewImg');
+    const urlPreviewRemove = document.getElementById('imageUrlPreviewRemove');
+
+    if (!urlInput) return;
+
+    let currentUrl = '';
+
+    urlInput.addEventListener('input', function () {
+        const url = urlInput.value.trim();
+
+        if (!url) {
+            urlPreview.hidden = true;
+            currentUrl = '';
+            return;
+        }
+
+        // Simple URL validation
+        try {
+            new URL(url);
+        } catch {
+            urlPreview.hidden = true;
+            currentUrl = '';
+            return;
+        }
+
+        currentUrl = url;
+        urlPreviewImg.src = url;
+        urlPreview.hidden = false;
+    });
+
+    if (urlPreviewRemove) {
+        urlPreviewRemove.addEventListener('click', function () {
+            urlInput.value = '';
+            urlPreview.hidden = true;
+            currentUrl = '';
+            urlInput.focus();
+        });
+    }
+
+    urlPreviewImg.addEventListener('error', function () {
+        urlPreview.hidden = true;
+        currentUrl = '';
+    });
+    } catch (err) {
+        console.error('[URL Preview] Initialization failed:', err);
+    }
+});
+
+// Before submit: clear hex_code fields for rows marked "no_hex" so backend treats them as null
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('form.admin-form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            document.querySelectorAll('.color-row').forEach(function (row) {
+                const noHex = row.querySelector('[data-color-no-hex]');
+                const picker = row.querySelector('[data-color-picker]');
+                if (noHex && noHex.checked && picker) {
+                    picker.disabled = true; // disabled inputs are excluded from form submit
+                }
+            });
+        });
+    }
+});
 </script>

@@ -10,6 +10,7 @@
             <p>Đơn đặt lúc {{ $order->created_at->format('H:i d/m/Y') }} · {{ $statusLabels[$order->status] ?? $order->status }}</p>
         </div>
         <a href="{{ route('admin.custom-cup-orders.index') }}" class="admin-action-button">← Quay lại danh sách</a>
+        <a href="{{ route('admin.custom-cup-orders.print', $order) }}" target="_blank" rel="noopener" class="admin-action-button">⬇ Tải thiết kế (SVG/PNG)</a>
     </div>
 
     @if (session('success'))

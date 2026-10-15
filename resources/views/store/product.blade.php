@@ -111,8 +111,8 @@
                             <label for="color-select" class="product-colors-label">Màu sắc:</label>
                             <select id="color-select" name="color_id" class="product-color-select">
                                 @foreach ($product['colors'] as $index => $color)
-                                    <option value="{{ $color['id'] ?? $index }}" data-hex="{{ $color['hex_code'] }}" data-name="{{ $color['name'] }}" {{ $index === 0 ? 'selected' : '' }}>
-                                        {{ $color['name'] }}
+                                    <option value="{{ $color['id'] ?? $index }}" data-hex="{{ $color['has_hex'] ? $color['hex_code'] : '' }}" data-name="{{ $color['name'] }}" data-has-hex="{{ $color['has_hex'] ? '1' : '0' }}" {{ $index === 0 ? 'selected' : '' }}>
+                                        {{ $color['name'] }}{{ $color['has_hex'] ? '' : ' (theo tên)' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -174,6 +174,21 @@
                                             <span class="file-name" id="file-name"></span>
                                         </div>
                                         <small class="custom-hint">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</small>
+
+                                        {{-- Preview ảnh đã chọn (cho khách thấy ngay ảnh gì) --}}
+                                        <div class="product-image-preview" id="product-image-preview" hidden>
+                                            <div class="product-image-preview-header">
+                                                <span class="product-image-preview-title">Ảnh đã chọn:</span>
+                                                <button type="button" class="product-image-preview-remove" id="product-image-preview-remove" aria-label="Xóa ảnh đã chọn">×</button>
+                                            </div>
+                                            <div class="product-image-preview-thumb">
+                                                <img id="product-image-preview-img" src="" alt="Preview ảnh đã chọn">
+                                            </div>
+                                            <div class="product-image-preview-meta">
+                                                <span class="product-image-preview-name" id="product-image-preview-name"></span>
+                                                <span class="product-image-preview-size" id="product-image-preview-size"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -312,6 +327,105 @@
     </div>
 @endsection
 
+@push('styles')
+<style>
+/* === Product image preview (hiển thị ảnh đã chọn cho khách thấy ngay) === */
+.product-image-preview {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%) !important;
+    border: 2px dashed #f0abfc !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+.product-image-preview[hidden] {
+    display: none !important;
+}
+.product-image-preview-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+.product-image-preview-title {
+    font-weight: 600 !important;
+    color: #831843 !important;
+    font-size: 13px !important;
+}
+.product-image-preview-remove {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    background: rgba(239, 68, 68, 0.95) !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    transition: all 0.2s ease !important;
+}
+.product-image-preview-remove:hover {
+    background: #dc2626 !important;
+    transform: scale(1.1) !important;
+}
+.product-image-preview-thumb {
+    width: 100% !important;
+    max-width: 140px !important;
+    aspect-ratio: 4 / 3 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    border: 2px solid #fce7f3 !important;
+    background: #f9fafb !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.product-image-preview-thumb img {
+    display: block !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+.product-image-preview-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    width: 100% !important;
+}
+.product-image-preview-name {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: block !important;
+}
+.product-image-preview-size {
+    font-size: 11px !important;
+    color: #9ca3af !important;
+    display: block !important;
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -321,14 +435,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const colorNameInput = document.getElementById('custom-color-name');
     const colorHexInput = document.getElementById('custom-color-hex');
 
+    // Image preview elements
+    const previewBox = document.getElementById('product-image-preview');
+    const previewImg = document.getElementById('product-image-preview-img');
+    const previewName = document.getElementById('product-image-preview-name');
+    const previewSize = document.getElementById('product-image-preview-size');
+    const previewRemove = document.getElementById('product-image-preview-remove');
+
+    function showImagePreview(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            hideImagePreview();
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        previewImg.src = url;
+        previewImg.onload = function() { URL.revokeObjectURL(url); };
+        previewName.textContent = file.name;
+        previewName.title = file.name;
+        const sizeKb = Math.round(file.size / 1024);
+        previewSize.textContent = sizeKb > 1024 ? (sizeKb/1024).toFixed(1) + ' MB' : sizeKb + ' KB';
+        previewBox.hidden = false;
+    }
+    function hideImagePreview() {
+        previewBox.hidden = true;
+        previewImg.src = '';
+        previewName.textContent = '';
+        previewSize.textContent = '';
+        if (fileInput) fileInput.value = '';
+        if (fileNameDisplay) fileNameDisplay.textContent = '';
+    }
+
     if (fileInput && fileNameDisplay) {
         fileInput.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
-                fileNameDisplay.textContent = '📎 ' + this.files[0].name;
+                const file = this.files[0];
+                fileNameDisplay.textContent = '📎 ' + file.name;
+                showImagePreview(file);
             } else {
                 fileNameDisplay.textContent = '';
+                hideImagePreview();
             }
         });
+    }
+
+    if (previewRemove) {
+        previewRemove.addEventListener('click', hideImagePreview);
     }
 
     if (colorSelect && colorNameInput && colorHexInput) {
