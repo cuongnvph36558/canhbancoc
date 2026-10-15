@@ -28,7 +28,8 @@ class CheckoutController extends Controller
         }
 
         $items = $products->map(function (Product $product) use ($cart, $shoppingCart): array {
-            $quantity = (int) $cart[$product->id];
+            $cartItem = $cart[$product->id] ?? ['quantity' => 0];
+            $quantity = (int) ($cartItem['quantity'] ?? 0);
 
             return [
                 'product' => $product,
@@ -37,6 +38,10 @@ class CheckoutController extends Controller
                 'line_total' => $shoppingCart->lineTotal($product, $quantity),
                 'available' => $product->stock >= $quantity,
                 'image' => $product->primaryImage?->url() ?? $product->image_url,
+                'custom_text' => $cartItem['custom_text'] ?? null,
+                'custom_color' => $cartItem['custom_color'] ?? null,
+                'custom_color_hex' => $cartItem['custom_color_hex'] ?? null,
+                'custom_image_path' => $cartItem['custom_image_path'] ?? null,
             ];
         })->values();
 
@@ -142,9 +147,19 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($products as $product) {
-                $quantity = (int) $cart[$product->id];
+                $cartItem = $cart[$product->id] ?? ['quantity' => 0];
+                $quantity = (int) ($cartItem['quantity'] ?? 0);
                 $unitPrice = $shoppingCart->unitPrice($product);
                 $product->decrement('stock', $quantity);
+
+                // Resolve color: customer choice first, else fall back to product's first active color
+                $colorValue = $cartItem['custom_color_hex'] ?? $cartItem['custom_color'] ?? null;
+                if (empty($colorValue)) {
+                    $fallbackColor = $product->colors()->where('is_active', true)->orderBy('id')->first();
+                    if ($fallbackColor !== null) {
+                        $colorValue = $fallbackColor->hex_code;
+                    }
+                }
 
                 $order->items()->create([
                     'product_id' => $product->id,
@@ -154,6 +169,9 @@ class CheckoutController extends Controller
                     'unit_price' => $unitPrice,
                     'quantity' => $quantity,
                     'line_total' => $unitPrice * $quantity,
+                    'custom_text' => $cartItem['custom_text'] ?? null,
+                    'custom_color' => $colorValue,
+                    'custom_image_path' => $cartItem['custom_image_path'] ?? null,
                 ]);
             }
 

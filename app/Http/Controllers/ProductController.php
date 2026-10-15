@@ -27,7 +27,7 @@ class ProductController extends Controller
         ]);
 
         $products = Product::query()
-            ->with(['images', 'primaryImage', 'category'])
+            ->with(['images', 'primaryImage', 'category', 'colors'])
             ->when($validated['search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
@@ -85,6 +85,9 @@ class ProductController extends Controller
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'is_active' => ['sometimes', 'boolean'],
+            'colors' => ['nullable', 'array'],
+            'colors.*.name' => ['required_with:colors', 'string', 'max:50'],
+            'colors.*.hex_code' => ['required_with:colors', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         $validated['slug'] = str()->slug($validated['name']);
@@ -93,9 +96,11 @@ class ProductController extends Controller
         unset($validated['images']);
 
         $storedPaths = $this->storeImages($imageFiles);
+        $colors = $validated['colors'] ?? [];
+        unset($validated['colors']);
 
         try {
-            DB::transaction(function () use ($validated, $storedPaths): void {
+            DB::transaction(function () use ($validated, $storedPaths, $colors): void {
                 $product = Product::create($validated);
 
                 foreach ($storedPaths as $position => $path) {
@@ -105,6 +110,8 @@ class ProductController extends Controller
                         'is_primary' => $position === 0,
                     ]);
                 }
+
+                $this->syncProductColors($product, $colors);
 
                 event(new StorefrontProductUpdated([
                     'id' => $product->id,
@@ -136,7 +143,7 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
-        $product->load(['images', 'category']);
+        $product->load(['images', 'category', 'colors']);
 
         return view('admin.products.edit', [
             'product' => $product,
@@ -174,6 +181,10 @@ class ProductController extends Controller
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'is_active' => ['sometimes', 'boolean'],
+            'colors' => ['nullable', 'array'],
+            'colors.*.id' => ['nullable', 'integer'],
+            'colors.*.name' => ['required_with:colors', 'string', 'max:50'],
+            'colors.*.hex_code' => ['required_with:colors', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         $imageFiles = $request->file('images', []);
@@ -194,9 +205,11 @@ class ProductController extends Controller
 
         unset($validated['images'], $validated['remove_image_ids'], $validated['remove_legacy_image']);
         $storedPaths = $this->storeImages($imageFiles);
+        $colors = $validated['colors'] ?? [];
+        unset($validated['colors']);
 
         try {
-            $removedImages = DB::transaction(function () use ($product, $validated, $removeImageIds, $storedPaths) {
+            $removedImages = DB::transaction(function () use ($product, $validated, $removeImageIds, $storedPaths, $colors) {
                 $product->update($validated);
 
                 $removedImages = $product->images()->whereIn('id', $removeImageIds)->get();
@@ -219,6 +232,8 @@ class ProductController extends Controller
                         'is_primary' => ! $hasPrimaryImage && $offset === 0,
                     ]);
                 }
+
+                $this->syncProductColors($product, $colors);
 
                 event(new StorefrontProductUpdated([
                     'id' => $product->id,
@@ -282,6 +297,26 @@ class ProductController extends Controller
         ]));
 
         return back()->with('success', 'Trạng thái sản phẩm đã được cập nhật.');
+    }
+
+    /**
+     * @param  array<int, array{id?: int, name: string, hex_code: string}>  $colors
+     */
+    private function syncProductColors(Product $product, array $colors): void
+    {
+        $validColors = collect($colors)
+            ->filter(fn (array $color): bool => ! empty($color['name']) && ! empty($color['hex_code']))
+            ->values();
+
+        $product->colors()->delete();
+
+        foreach ($validColors as $color) {
+            $product->colors()->create([
+                'name' => $color['name'],
+                'hex_code' => strtoupper($color['hex_code']),
+                'is_active' => true,
+            ]);
+        }
     }
 
     /**

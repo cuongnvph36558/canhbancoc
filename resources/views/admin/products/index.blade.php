@@ -67,6 +67,7 @@
                         <th>Sản phẩm</th>
                         <th>SKU</th>
                         <th>Phân loại</th>
+                        <th>Màu sắc</th>
                         <th>Giá</th>
                         <th>Tồn kho</th>
                         <th>Trạng thái</th>
@@ -95,6 +96,22 @@
                                     <span class="admin-category-chip">
                                         {{ $product->category->icon ? $product->category->icon.' ' : '' }}{{ $product->category->name }}
                                     </span>
+                                @else
+                                    <span style="color:#999;">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($product->colors->isNotEmpty())
+                                    <div class="admin-color-swatches" aria-label="Các màu của sản phẩm">
+                                        @foreach ($product->colors as $color)
+                                            <span
+                                                class="admin-color-swatch"
+                                                style="background-color: {{ $color->hex_code }};"
+                                                title="{{ $color->name }} ({{ $color->hex_code }})"
+                                            ></span>
+                                        @endforeach
+                                    </div>
+                                    <small class="admin-color-count">{{ $product->colors->count() }} màu</small>
                                 @else
                                     <span style="color:#999;">—</span>
                                 @endif
@@ -142,7 +159,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="admin-empty-state">
+                            <td colspan="8" class="admin-empty-state">
                                 {{ $search || $status ? 'Không tìm thấy sản phẩm phù hợp.' : 'Chưa có sản phẩm nào. Hãy tạo sản phẩm đầu tiên.' }}
                             </td>
                         </tr>
@@ -230,6 +247,31 @@
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
+}
+
+.admin-color-swatches {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 160px;
+}
+
+.admin-color-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, .15);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12);
+    cursor: help;
+}
+
+.admin-color-count {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 11px;
 }
 
 .admin-inline-form {

@@ -63,11 +63,11 @@ if (cupDesigner) {
     const mugSpriteBase = cupDesigner.dataset.mugSpriteBase ?? '/img';
     const fmt = new Intl.NumberFormat('vi-VN');
 
-    // --- Mugs (3 SVG sprite với màu sắc khác nhau)
+    // --- Mugs (3 ảnh chụp thực tế từ tachanh.html)
     const MUGS = {
-        black: { name: 'Quai đen – lòng đen', src: `${mugSpriteBase}/coc-den.svg?v=1` },
-        pink: { name: 'Quai hồng – lòng hồng', src: `${mugSpriteBase}/coc-hong.svg?v=1` },
-        white: { name: 'Trắng tinh', src: `${mugSpriteBase}/coc-trang.svg?v=1` },
+        black: { name: 'Quai đen – lòng đen', src: `${mugSpriteBase}/coc-black.jpg?v=1` },
+        pink: { name: 'Quai hồng – lòng hồng', src: `${mugSpriteBase}/coc-pink.jpg?v=1` },
+        white: { name: 'Trắng tinh', src: `${mugSpriteBase}/coc-white.jpg?v=1` },
     };
 
     // --- Layers (mỗi layer = 1 phần tử in: text, emoji, hoặc image)
@@ -125,10 +125,8 @@ if (cupDesigner) {
         const w = stage.clientWidth;
         const h = stage.clientHeight;
         const dpr = window.devicePixelRatio || 1;
-        canvas.style.width = (PRINT_AREA.w * w) + 'px';
-        canvas.style.height = (PRINT_AREA.h * h) + 'px';
-        canvas.style.left = (PRINT_AREA.x * w) + 'px';
-        canvas.style.top = (PRINT_AREA.y * h) + 'px';
+        // CSS handles positioning (left/top/width/height via %)
+        // JS only sets canvas buffer size
         canvas.width = Math.round(PRINT_AREA.w * w * dpr);
         canvas.height = Math.round(PRINT_AREA.h * h * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -652,21 +650,49 @@ if (cupDesigner) {
         });
     }
 
-    function renderModalPreview() {
-        // Build a higher-res combined canvas
+    async function renderModalPreview() {
+        // Use html2canvas to capture the preview stage exactly as shown
+        try {
+            // First ensure all images are loaded
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            
+            const previewStage = document.querySelector('[data-cup-preview]');
+            if (!previewStage) return;
+            
+            const canvas = await html2canvas(previewStage, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+            });
+            
+            const url = canvas.toDataURL('image/png', 1);
+            modalPreview.src = url;
+            if (designPreviewInput) designPreviewInput.value = url;
+        } catch (err) {
+            console.error('Preview capture failed:', err);
+            // Fallback to original method
+            renderModalPreviewFallback();
+        }
+
+        // Build summary text
+        const c2 = calc();
+        modalSummary.textContent = `${currentMug.name} × ${c2.q} — ${fmt.format(c2.total)}đ`;
+    }
+    
+    function renderModalPreviewFallback() {
+        // Fallback: draw mug + canvas overlay
         const W = 720, H = 720;
         const c = document.createElement('canvas');
         c.width = W; c.height = H;
         const cx = c.getContext('2d');
-        // Fill white
         cx.fillStyle = '#fff';
         cx.fillRect(0, 0, W, H);
-        // Draw mug sprite (scaled to fit)
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             cx.drawImage(img, 0, 0, W, H);
-            // Draw print area overlay
             cx.globalCompositeOperation = 'multiply';
             const px = 0.376 * W, py = 0.264 * W, pw = 0.527 * W, ph = 0.547 * H;
             const tempC = document.createElement('canvas');
@@ -675,21 +701,16 @@ if (cupDesigner) {
             tempC.getContext('2d').drawImage(canvas, 0, 0);
             cx.drawImage(tempC, px, py, pw, ph);
             cx.globalCompositeOperation = 'source-over';
-            const url = c.toDataURL('image/jpeg', 0.85);
+            const url = c.toDataURL('image/png', 1);
             modalPreview.src = url;
             if (designPreviewInput) designPreviewInput.value = url;
         };
         img.onerror = () => {
-            // Mug failed — still send layers
-            const url = c.toDataURL('image/jpeg', 0.85);
+            const url = c.toDataURL('image/png', 1);
             modalPreview.src = url;
             if (designPreviewInput) designPreviewInput.value = url;
         };
         img.src = currentMug.src;
-
-        // Build summary text
-        const c2 = calc();
-        modalSummary.textContent = `${currentMug.name} × ${c2.q} — ${fmt.format(c2.total)}đ`;
     }
 
     openOrderButton?.addEventListener('click', () => {

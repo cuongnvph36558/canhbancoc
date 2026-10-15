@@ -106,6 +106,19 @@
 
                     <p class="product-buy-description">{{ $productDescription }}</p>
 
+                    @if (! empty($product['colors']))
+                        <div class="product-colors">
+                            <label for="color-select" class="product-colors-label">Màu sắc:</label>
+                            <select id="color-select" name="color_id" class="product-color-select">
+                                @foreach ($product['colors'] as $index => $color)
+                                    <option value="{{ $color['id'] ?? $index }}" data-hex="{{ $color['hex_code'] }}" data-name="{{ $color['name'] }}" {{ $index === 0 ? 'selected' : '' }}>
+                                        {{ $color['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <div class="product-stock-status{{ $isAvailable ? ' is-available' : ' is-unavailable' }}" role="status">
                         <span class="product-stock-dot" aria-hidden="true"></span>
                         {{ $isAvailable ? (! empty($product['database_product_id']) ? 'Sẵn sàng giao hàng — còn '.$product['stock'].' sản phẩm' : 'Sẵn sàng nhận yêu cầu đặt hàng') : 'Tạm hết hàng — liên hệ để được tư vấn' }}
@@ -113,9 +126,57 @@
 
                     <div class="product-buy-actions">
                         @if (! empty($product['database_product_id']) && $isAvailable)
-                            <form class="product-cart-form" method="POST" action="{{ route('cart.store') }}">
+                            <form class="product-cart-form" method="POST" action="{{ route('cart.store') }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product['database_product_id'] }}">
+                                @php
+                                    $initialColor = $product['colors'][0] ?? null;
+                                    $initialColorName = $initialColor['name'] ?? '';
+                                    $initialColorHex = $initialColor['hex_code'] ?? '';
+                                @endphp
+                                <input type="hidden" name="custom_color" id="custom-color-name" value="{{ $initialColorName }}">
+                                <input type="hidden" name="custom_color_hex" id="custom-color-hex" value="{{ $initialColorHex }}">
+                                
+                                <div class="product-custom-text">
+                                    <div class="custom-text-group">
+                                        <label for="custom-name" class="custom-label">
+                                            <span class="custom-label-icon">✏️</span>
+                                            Tên/Text in trên cốc
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            id="custom-name" 
+                                            name="custom_text" 
+                                            class="custom-input" 
+                                            placeholder="VD: Yêu em, Happy Birthday, ..."
+                                            maxlength="100"
+                                        >
+                                        <small class="custom-hint">Tối đa 100 ký tự</small>
+                                    </div>
+                                    
+                                    <div class="custom-text-group">
+                                        <label for="custom-image" class="custom-label">
+                                            <span class="custom-label-icon">🖼️</span>
+                                            Hình ảnh muốn in (nếu có)
+                                        </label>
+                                        <div class="custom-file-upload">
+                                            <input 
+                                                type="file" 
+                                                id="custom-image" 
+                                                name="custom_image" 
+                                                class="custom-file-input" 
+                                                accept="image/*"
+                                            >
+                                            <label for="custom-image" class="custom-file-label">
+                                                <span class="file-upload-icon">📁</span>
+                                                <span class="file-upload-text">Chọn hình ảnh</span>
+                                            </label>
+                                            <span class="file-name" id="file-name"></span>
+                                        </div>
+                                        <small class="custom-hint">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</small>
+                                    </div>
+                                </div>
+
                                 <label for="product-quantity">Số lượng</label>
                                 <input id="product-quantity" type="number" name="quantity" value="1" min="1" max="{{ $product['stock'] }}" required>
                                 <button id="product-cart-submit" class="product-order-button" type="submit">
@@ -250,3 +311,43 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('custom-image');
+    const fileNameDisplay = document.getElementById('file-name');
+    const colorSelect = document.getElementById('color-select');
+    const colorNameInput = document.getElementById('custom-color-name');
+    const colorHexInput = document.getElementById('custom-color-hex');
+
+    if (fileInput && fileNameDisplay) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileNameDisplay.textContent = '📎 ' + this.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
+    }
+
+    if (colorSelect && colorNameInput && colorHexInput) {
+        // Update hidden fields when color changes
+        function updateColorFields() {
+            const selectedOption = colorSelect.options[colorSelect.selectedIndex];
+            colorNameInput.value = selectedOption.dataset.name || '';
+            colorHexInput.value = selectedOption.dataset.hex || '';
+            console.log('[color] set', { name: colorNameInput.value, hex: colorHexInput.value, selectedIndex: colorSelect.selectedIndex });
+        }
+        colorSelect.addEventListener('change', updateColorFields);
+        updateColorFields(); // Set initial values
+
+        // Re-sync right before submit to avoid stale values if user changed selection
+        const cartForm = document.querySelector('.product-cart-form');
+        if (cartForm) {
+            cartForm.addEventListener('submit', updateColorFields);
+        }
+    }
+});
+</script>
+@endpush

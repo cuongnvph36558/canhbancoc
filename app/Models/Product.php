@@ -59,4 +59,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductReview::class);
     }
+
+    public function colors(): HasMany
+    {
+        return $this->hasMany(ProductColor::class)->where('is_active', true);
+    }
 }

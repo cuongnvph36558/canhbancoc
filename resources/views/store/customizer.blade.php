@@ -61,9 +61,8 @@
                                 data-cup-variant-option="{{ $variant }}"
                                 aria-pressed="{{ $selectedVariant === $variant ? 'true' : 'false' }}"
                             >
-                                <span class="cup-miniature" data-cup-variant="{{ $variant }}" aria-hidden="true">
-                                    <span class="cup-miniature-handle"></span>
-                                    <span class="cup-miniature-body"><span class="cup-miniature-rim"></span></span>
+                                <span class="cup-miniature">
+                                    <img src="{{ asset('img/coc-' . $variant . '.jpg') }}" alt="{{ $details['name'] }}" loading="lazy">
                                 </span>
                                 <span class="cup-style-name">{{ $details['name'] }}</span>
                             </button>

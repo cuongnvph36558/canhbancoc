@@ -162,7 +162,7 @@ class StoreController extends Controller
     {
         $products = Product::query()
             ->where('is_active', true)
-            ->with(['images', 'primaryImage', 'category'])
+            ->with(['images', 'primaryImage', 'category', 'colors'])
             ->when($scope !== null, fn (Builder $query) => $scope($query))
             ->latest()
             ->get()
@@ -193,6 +193,10 @@ class StoreController extends Controller
                     'details' => $product->detailed_description
                         ? array_values(array_filter(preg_split('/\r\n|\r|\n/', $product->detailed_description) ?: []))
                         : [],
+                    'colors' => $product->colors->map(fn ($color): array => [
+                        'name' => $color->name,
+                        'hex_code' => $color->hex_code,
+                    ])->all(),
                 ];
             })
             ->all();

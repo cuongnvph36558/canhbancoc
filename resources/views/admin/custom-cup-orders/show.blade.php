@@ -40,7 +40,18 @@
         <article class="admin-products-panel">
             <div class="admin-panel-heading"><div><h2>Chi tiết sản phẩm</h2></div></div>
             <dl class="admin-order-details">
-                <div><dt>Kiểu cốc</dt><dd>{{ $cupVariant['name'] ?? $order->cup_variant }} · {{ $order->cup_size }}</dd></div>
+                <div>
+                    <dt>Kiểu cốc</dt>
+                    <dd>
+                        {{ $cupVariant['name'] ?? $order->cup_variant }} · {{ $order->cup_size }}
+                        @if ($cupVariant)
+                            <span class="admin-cup-color-preview">
+                                <span class="cup-color-swatch" style="background-color: {{ $cupVariant['handle_color'] }}" title="Màu quai: {{ $cupVariant['handle_color'] }}"></span>
+                                <span class="cup-color-swatch" style="background-color: {{ $cupVariant['interior_color'] }}" title="Màu lòng: {{ $cupVariant['interior_color'] }}"></span>
+                            </span>
+                        @endif
+                    </dd>
+                </div>
                 <div><dt>Số lượng</dt><dd>{{ $order->quantity }} cốc</dd></div>
                 <div><dt>Đơn giá</dt><dd>{{ number_format($order->unit_price, 0, ',', '.') }}đ</dd></div>
                 <div><dt>Giảm giá</dt><dd>{{ $order->discount_percentage }}%</dd></div>

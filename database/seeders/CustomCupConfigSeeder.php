@@ -40,9 +40,9 @@ class CustomCupConfigSeeder extends Seeder
         if (CustomCupIcon::query()->doesntExist()) {
             $icons = (array) ($config['icons'] ?? []);
 
-            foreach ($icons as $index => $glyph) {
+            foreach ($icons as $index => $icon) {
                 CustomCupIcon::query()->create([
-                    'glyph' => (string) $glyph,
+                    'icon' => (string) $icon,
                     'sort_order' => $index,
                 ]);
             }

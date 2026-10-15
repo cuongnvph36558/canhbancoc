@@ -165,6 +165,7 @@ return [
                     'footer_story_label' => ['label' => 'Footer — Câu chuyện thương hiệu', 'default' => 'Câu chuyện Cốc Xinh'],
                     'footer_visit_label' => ['label' => 'Footer — Ghé thăm chúng tôi', 'default' => 'Ghé thăm chúng tôi'],
                     'footer_connect_title' => ['label' => 'Tiêu đề Kết nối', 'default' => 'Kết nối'],
+                    'footer_facebook_url' => ['label' => 'Link Facebook', 'default' => ''],
                     'footer_email' => ['label' => 'Email', 'default' => 'hello@cocxinh.vn'],
                     'footer_phone' => ['label' => 'Số điện thoại', 'default' => '0909 123 456'],
                     'footer_address' => ['label' => 'Địa chỉ', 'default' => '12 Nguyễn Trãi, Quận 1, TP.HCM'],

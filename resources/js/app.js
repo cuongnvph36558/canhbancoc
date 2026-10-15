@@ -6,6 +6,37 @@ const adminSidebarToggle = document.querySelector('.admin-sidebar-toggle');
 const adminShell = document.querySelector('.admin-shell');
 const adminSidebar = document.querySelector('#admin-sidebar');
 
+// === Hide header on scroll down, show on scroll up ===
+const siteHeader = document.querySelector('.site-header');
+const quickActions = document.querySelector('.storefront-quick-actions');
+if (siteHeader || quickActions) {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const updateChrome = () => {
+        const currentY = window.scrollY;
+        if (currentY < 80) {
+            siteHeader?.classList.remove('is-hidden', 'is-condensed');
+            quickActions?.classList.remove('is-hidden');
+        } else if (currentY > lastScrollY + 6) {
+            siteHeader?.classList.add('is-hidden');
+            siteHeader?.classList.remove('is-condensed');
+            quickActions?.classList.add('is-hidden');
+        } else if (currentY < lastScrollY - 6) {
+            siteHeader?.classList.remove('is-hidden');
+            siteHeader?.classList.add('is-condensed');
+            quickActions?.classList.remove('is-hidden');
+        }
+        lastScrollY = currentY;
+        ticking = false;
+    };
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(updateChrome);
+            ticking = true;
+        }
+    }, { passive: true });
+}
+
 if (document.querySelector('[data-vietnam-address]')) {
     import('./vietnam-addresses.js')
         .then(({ initializeVietnamAddressFields }) => initializeVietnamAddressFields())

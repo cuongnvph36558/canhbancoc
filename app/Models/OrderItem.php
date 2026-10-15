@@ -17,6 +17,9 @@ class OrderItem extends Model
         'unit_price',
         'quantity',
         'line_total',
+        'custom_text',
+        'custom_image_path',
+        'custom_color',
     ];
 
     protected function casts(): array

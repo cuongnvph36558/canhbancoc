@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Thiết kế cốc của bạn</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Pacifico&family=Oswald:wght@500&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
@@ -16,7 +19,19 @@ header{padding:20px 20px 4px;max-width:1100px;margin:auto}
 h1{margin:0;font-size:1.5rem}
 header p{margin:2px 0 0;color:var(--mute);font-size:.92rem}
 main{max-width:1100px;margin:auto;padding:16px 20px 40px;display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
-@media(max-width:820px){main{grid-template-columns:1fr}}
+@media(max-width:820px){main{grid-template-columns:1fr;padding-bottom:8px}
+    .stage{position:sticky;top:8px;z-index:1}
+    section.card:not(.stage){position:fixed;left:0;right:0;bottom:0;max-height:85vh;border-radius:18px 18px 0 0;padding:0 14px 14px;transform:translateY(calc(100% - 64px));transition:transform .35s cubic-bezier(.22,.8,.32,1);z-index:10;box-shadow:0 -10px 30px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden}
+    section.card:not(.stage).open{transform:translateY(0)}
+    .sheet-handle{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;height:44px;margin:0 -14px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;color:var(--mute);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+    .sheet-handle::before{content:"";width:44px;height:5px;background:var(--line);border-radius:3px}
+    .sheet-handle::after{content:"Tùy chỉnh";font-weight:600}
+    section.card:not(.stage).open .sheet-handle::after{content:"Đóng"}
+    .sheet-body{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 2px 8px}
+    .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9;opacity:0;pointer-events:none;transition:opacity .3s}
+    .sheet-backdrop.show{opacity:1;pointer-events:auto}
+    body.sheet-open{overflow:hidden}}
+.sheet-handle,.sheet-backdrop{display:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .stage{display:flex;flex-direction:column;align-items:center;gap:10px;position:sticky;top:8px;align-self:start}
 .photo{position:relative;width:min(100%,540px);aspect-ratio:1/1;background:#fff;border-radius:10px;overflow:hidden}
@@ -65,7 +80,9 @@ input[type=color]{width:42px;height:34px;border:1px solid var(--line);border-rad
     <div class="hint">Chạm/kéo để di chuyển • vùng nét đứt là vùng in</div>
   </section>
 
-  <section class="card">
+  <section class="card" id="sidePanel" style="display:none">
+    <div class="sheet-handle" id="sheetHandle" aria-label="Mở/đóng bảng tùy chỉnh" style="display:none">Tùy chỉnh</div>
+    <div class="sheet-body">
     <div class="sec">
       <h3>1. Chọn mẫu cốc</h3>
       <div class="mugs" id="mugs"></div>
@@ -119,8 +136,11 @@ input[type=color]{width:42px;height:34px;border:1px solid var(--line);border-rad
         <button class="btn pri" id="order">Đặt hàng</button>
       </div>
     </div>
+    </div>
   </section>
 </main>
+
+<div class="sheet-backdrop" id="sheetBackdrop" style="display:none"></div>
 
 <div class="modal" id="modal"><div class="card" id="mbox"></div></div>
 
@@ -442,7 +462,14 @@ $('#order').onclick=()=>{
   const c=calc(),t=$('#type').selectedOptions[0].textContent.split(' — ')[0];
   $('#mbox').innerHTML=`<h2 style="margin:0 0 10px">Xác nhận đơn hàng</h2>
   <img src="${url}" alt="Thiết kế" style="margin-bottom:10px">
-  <div style="margin-bottom:10px"><b>${mug.name}</b> · ${t} × ${c.q} — <b>${fmt(c.total)}</b></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px">
+    <img src="${mug.src}" alt="${mug.name}" style="width:60px;height:60px;border-radius:8px;border:1px solid var(--line);object-fit:cover">
+    <div>
+      <div style="font-weight:600">${mug.name}</div>
+      <div style="font-size:.85rem;color:var(--mute)">${t} × ${c.q}</div>
+    </div>
+  </div>
+  <div style="margin-bottom:10px"><b>Tổng cộng:</b> ${fmt(c.total)}</div>
   <label>Họ tên</label><input type="text" id="n"><label>Số điện thoại</label><input type="text" id="p" inputmode="tel"><label>Địa chỉ giao hàng</label><input type="text" id="a">
   <div class="row" style="margin-top:14px"><button class="btn pri" id="go">Gửi đơn</button><button class="btn" id="cl">Đóng</button></div><div id="msg" style="margin-top:10px"></div>`;
   $('#modal').classList.add('show');
@@ -457,6 +484,69 @@ add({type:'text',text:'Tên của bạn',size:64,font:'Pacifico',color:'#111111'
 add({type:'emoji',text:'☕',size:120,y:370});
 select(null);
 document.fonts.ready.then(draw);upd();
+
+/* Bottom sheet — chỉ kích hoạt trên mobile */
+(function(){
+  const handle=document.getElementById('sheetHandle');
+  const backdrop=document.getElementById('sheetBackdrop');
+  const panel=document.getElementById('sidePanel');
+  if(!handle||!backdrop||!panel)return;
+
+  const mq=window.matchMedia('(max-width:820px)');
+  let isMobile=mq.matches;
+
+  const setPanel=open=>{
+    const s=panel.style;
+    s.setProperty('position','fixed','important');
+    s.setProperty('left','0','important');
+    s.setProperty('right','0','important');
+    s.setProperty('bottom','0','important');
+    s.setProperty('max-height','85vh','important');
+    s.setProperty('border-radius','18px 18px 0 0','important');
+    s.setProperty('padding','0 14px 14px','important');
+    s.setProperty('z-index','2147483647','important');
+    s.setProperty('box-shadow','0 -10px 30px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.06)','important');
+    s.setProperty('display','flex','important');
+    s.setProperty('flex-direction','column','important');
+    s.setProperty('overflow','hidden','important');
+    s.setProperty('transition','transform .35s cubic-bezier(.22,.8,.32,1)','important');
+    s.setProperty('transform',open?'translateY(0)':'translateY(calc(100% - 64px))','important');
+  };
+  const applyMobileLayout=()=>{
+    handle.setAttribute('style','display:flex !important;flex:none;align-items:center;justify-content:center;gap:8px;height:44px;margin:0 -14px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;color:var(--mute);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;background:transparent !important;');
+    setPanel(false);
+    backdrop.setAttribute('style','position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147483646;opacity:0;pointer-events:none;transition:opacity .3s;');
+  };
+  const clearMobileLayout=()=>{
+    panel.removeAttribute('style');
+    handle.setAttribute('style','display:none !important');
+    backdrop.setAttribute('style','display:none !important');
+    document.body.classList.remove('sheet-open');
+    panel.classList.remove('open');
+  };
+
+  const open=()=>{panel.classList.add('open');setPanel(true);backdrop.style.opacity='1';backdrop.style.pointerEvents='auto';document.body.classList.add('sheet-open');};
+  const close=()=>{panel.classList.remove('open');setPanel(false);backdrop.style.opacity='0';backdrop.style.pointerEvents='none';document.body.classList.remove('sheet-open');};
+  const toggle=()=>panel.classList.contains('open')?close():open();
+
+  let startY=null,currentY=0,dragging=false;
+  const onStart=e=>{if(!isMobile)return;dragging=true;startY=(e.touches?e.touches[0].clientY:e.clientY);currentY=0;panel.style.transition='none';};
+  const onMove=e=>{if(!dragging||!isMobile)return;const y=(e.touches?e.touches[0].clientY:e.clientY);currentY=y-startY;if(currentY>0){panel.style.transform=`translateY(${currentY}px)`;e.preventDefault();}};
+  const onEnd=()=>{if(!dragging)return;dragging=false;panel.style.transition='';if(currentY>80)close();else open();};
+
+  handle.addEventListener('click',toggle);
+  handle.addEventListener('touchstart',onStart,{passive:false});
+  handle.addEventListener('touchmove',onMove,{passive:false});
+  handle.addEventListener('touchend',onEnd);
+  handle.addEventListener('mousedown',onStart);
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onEnd);
+  backdrop.addEventListener('click',close);
+
+  const onChange=()=>{isMobile=mq.matches;isMobile?applyMobileLayout():clearMobileLayout();console.log('[Sheet] isMobile=',isMobile,'panel=',panel.className);};
+  onChange();
+  mq.addEventListener('change',onChange);
+})();
 </script>
 </body>
 </html>

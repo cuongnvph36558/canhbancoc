@@ -29,7 +29,8 @@ class CartController extends Controller
         }
 
         $items = $products->map(function (Product $product) use ($cart, $shoppingCart): array {
-            $quantity = (int) $cart[$product->id];
+            $cartItem = $cart[$product->id] ?? ['quantity' => 0];
+            $quantity = (int) ($cartItem['quantity'] ?? 0);
 
             return [
                 'product' => $product,
@@ -38,6 +39,10 @@ class CartController extends Controller
                 'line_total' => $shoppingCart->lineTotal($product, $quantity),
                 'available' => $product->stock >= $quantity,
                 'image' => $product->primaryImage?->url() ?? $product->image_url,
+                'custom_text' => $cartItem['custom_text'] ?? null,
+                'custom_color' => $cartItem['custom_color'] ?? null,
+                'custom_color_hex' => $cartItem['custom_color_hex'] ?? null,
+                'custom_image_path' => $cartItem['custom_image_path'] ?? null,
             ];
         })->values();
 
@@ -47,12 +52,23 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ShoppingCart $shoppingCart): RedirectResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'min:1'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'custom_text' => ['nullable', 'string', 'max:100'],
+            'custom_color' => ['nullable', 'string', 'max:50'],
+            'custom_color_hex' => ['nullable', 'string', 'max:20'],
+            'custom_image' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
+
+        \Log::info('Cart.store received', [
+            'custom_color' => $validated['custom_color'] ?? null,
+            'custom_color_hex' => $validated['custom_color_hex'] ?? null,
+            'raw' => $request->only(['custom_color', 'custom_color_hex']),
+        ]);
+
         $product = Product::query()
             ->whereKey($validated['product_id'])
             ->where('is_active', true)
@@ -63,7 +79,7 @@ class CartController extends Controller
         }
 
         $cart = $request->session()->get('cart', []);
-        $newQuantity = (int) ($cart[$product->id] ?? 0) + (int) $validated['quantity'];
+        $newQuantity = (int) ($cart[$product->id]['quantity'] ?? 0) + (int) $validated['quantity'];
 
         if ($newQuantity > 99) {
             return back()->withErrors(['quantity' => 'Mỗi sản phẩm chỉ có thể đặt tối đa 99 chiếc trong một đơn hàng.']);
@@ -73,7 +89,37 @@ class CartController extends Controller
             return back()->withErrors(['quantity' => 'Số lượng yêu cầu vượt quá tồn kho hiện tại.']);
         }
 
-        $cart[$product->id] = $newQuantity;
+        // Store custom image if uploaded
+        $customImagePath = null;
+        if ($request->hasFile('custom_image')) {
+            $customImagePath = $shoppingCart->storeCustomImage($request->file('custom_image'));
+        }
+
+        // Merge custom data - keep existing if not provided
+        $existingCustomText = $cart[$product->id]['custom_text'] ?? null;
+        $existingCustomImage = $cart[$product->id]['custom_image_path'] ?? null;
+        $existingCustomColor = $cart[$product->id]['custom_color'] ?? null;
+        $existingCustomColorHex = $cart[$product->id]['custom_color_hex'] ?? null;
+
+        // Fallback to first active color of the product if customer didn't pick one
+        $resolvedColor = $validated['custom_color'] ?? $existingCustomColor;
+        $resolvedColorHex = $validated['custom_color_hex'] ?? $existingCustomColorHex;
+        if (empty($resolvedColorHex) && empty($resolvedColor)) {
+            $fallbackColor = $product->colors()->where('is_active', true)->orderBy('id')->first();
+            if ($fallbackColor !== null) {
+                $resolvedColor = $fallbackColor->name;
+                $resolvedColorHex = $fallbackColor->hex_code;
+            }
+        }
+
+        $cart[$product->id] = [
+            'quantity' => $newQuantity,
+            'custom_text' => $validated['custom_text'] ?? $existingCustomText,
+            'custom_color' => $resolvedColor,
+            'custom_color_hex' => $resolvedColorHex,
+            'custom_image_path' => $customImagePath ?? $existingCustomImage,
+        ];
+
         $request->session()->put('cart', $cart);
 
         return to_route('cart.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
@@ -98,7 +144,7 @@ class CartController extends Controller
             return back()->withErrors(['quantity' => 'Số lượng yêu cầu vượt quá tồn kho hiện tại.']);
         }
 
-        $cart[$productId] = (int) $validated['quantity'];
+        $cart[$productId]['quantity'] = (int) $validated['quantity'];
         $request->session()->put('cart', $cart);
 
         return to_route('cart.index')->with('success', 'Giỏ hàng đã được cập nhật.');

@@ -106,6 +106,21 @@
                                     <span class="admin-order-item-placeholder" aria-label="Sản phẩm chưa có ảnh">☕</span>
                                 @endif
                                 <small>{{ $firstItem?->product_name }}{{ $order->items_count > 1 ? ' và '.($order->items_count - 1).' sản phẩm khác' : '' }}</small>
+                                @php($coloredItems = $order->items->filter(function ($it) { return !empty($it->custom_color); }))
+                                @if ($coloredItems->isNotEmpty())
+                                    <div class="admin-custom-info admin-custom-color" style="margin-top: 4px;">
+                                        @foreach ($coloredItems as $colorItem)
+                                            <span class="admin-color-swatch" style="background-color: {{ $colorItem->custom_color }};" title="{{ $colorItem->product_name }} × {{ $colorItem->quantity }}"></span>
+                                        @endforeach
+                                        <span style="font-size: 11px;">{{ $coloredItems->count() }} màu</span>
+                                    </div>
+                                @elseif ($firstItem?->product?->colors?->isNotEmpty())
+                                    @php($defaultColor = $firstItem->product->colors->first())
+                                    <div class="admin-custom-info admin-custom-color" style="margin-top: 4px;">
+                                        <span class="admin-color-swatch" style="background-color: {{ $defaultColor->hex_code }};" title="Màu mặc định - khách không chọn"></span>
+                                        <span style="font-size: 11px;">Mặc định: {{ $defaultColor->name }}</span>
+                                    </div>
+                                @endif
                             </td>
                             <td><strong>{{ number_format((float) $order->total, 0, ',', '.') }}đ</strong></td>
                             <td><span class="admin-state is-inactive">{{ $statusLabels[$order->order_status] ?? $order->order_status }}</span></td>

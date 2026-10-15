@@ -2,6 +2,17 @@
     $siteHeaderFooter = app(\App\Services\SitePageContent::class)->get('header_footer');
     $headerBrandName = $siteHeaderFooter['brand_name'];
     $headerLogoUrl = $siteHeaderFooter['logo_image_url'] ?: (asset('img/logo.png') . '?v=' . filemtime(public_path('img/logo.png')));
+
+    // Calculate cart count (support both old and new cart structure)
+    $cart = session('cart', []);
+    $cartCount = 0;
+    foreach ($cart as $item) {
+        if (is_array($item)) {
+            $cartCount += $item['quantity'] ?? 0;
+        } else {
+            $cartCount += (int) $item;
+        }
+    }
 @endphp
 
 <!DOCTYPE html>
@@ -12,11 +23,12 @@
     <meta name="description" content="@yield('description', config('store.name').' — những chiếc cốc xinh được làm riêng cho bạn.')">
     <title>@yield('title', config('store.name')) — Cốc xinh theo cách của bạn</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body
-    class="cup-storefront cup-original @yield('body-class')"
-    data-cart-count="{{ array_sum(session('cart', [])) }}"
->
+    class="cup-storefront cup-storefront cup-storefront cup-original @yield('body-class')"
+    data-cart-count="{{ $cartCount }}"
+    >
     <div class="announcement">{{ $siteHeaderFooter['announcement_text'] }}</div>
     <header class="site-header">
         <div class="container nav-wrap">
@@ -74,7 +86,7 @@
                     <circle cx="10" cy="20" r="1"></circle>
                     <circle cx="18" cy="20" r="1"></circle>
                 </svg>
-                <span class="storefront-live-cart__count" data-live-cart-count>{{ array_sum(session('cart', [])) }}</span>
+                <span class="storefront-live-cart__count" data-live-cart-count>{{ $cartCount }}</span>
             </a>
         </div>
     </div>
@@ -95,6 +107,14 @@
             </div>
             <div class="footer-column">
                 <h2>{{ $siteHeaderFooter['footer_connect_title'] }}</h2>
+                @if (! empty($siteHeaderFooter['footer_facebook_url']))
+                    <a href="{{ $siteHeaderFooter['footer_facebook_url'] }}" target="_blank" rel="noopener noreferrer" class="footer-social-link footer-social-facebook">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                    </a>
+                @endif
                 <a href="mailto:{{ $siteHeaderFooter['footer_email'] }}">{{ $siteHeaderFooter['footer_email'] }}</a>
                 <a href="tel:{{ preg_replace('/\s+/', '', $siteHeaderFooter['footer_phone']) }}">{{ $siteHeaderFooter['footer_phone'] }}</a>
                 <span>{{ $siteHeaderFooter['footer_address'] }}</span>

@@ -1,5 +1,21 @@
 @extends('layouts.store')
 
+@push('styles')
+<style>
+.cart-custom-note {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #7c3aed;
+    background: #f5f3ff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+</style>
+@endpush
+
 @section('title', 'Giỏ hàng')
 @section('content')
     <section class="shopping-page">
@@ -66,6 +82,12 @@
                                         <p>{{ number_format($item['unit_price'], 0, ',', '.') }}đ / sản phẩm</p>
                                         @if (! $item['available'])
                                             <p class="form-error">Chỉ còn {{ $item['product']->stock }} sản phẩm trong kho. Hãy cập nhật số lượng.</p>
+                                        @endif
+                                        @if (! empty($item['custom_text']))
+                                            <p class="cart-custom-note"><span>✏️</span> Text: {{ $item['custom_text'] }}</p>
+                                        @endif
+                                        @if (! empty($item['custom_image_path']))
+                                            <p class="cart-custom-note"><span>🖼️</span> Có ảnh tùy chỉnh</p>
                                         @endif
                                     </div>
                                     <form class="cart-quantity-form" method="POST" action="{{ route('cart.update', $item['product']->id) }}">

@@ -69,6 +69,26 @@
                     </div>
                 @endif
             </div>
+
+            @if ($product->colors->isNotEmpty())
+                <div class="admin-card admin-card-colors">
+                    <div class="admin-card-header">
+                        <h3>🎨 Màu sắc sản phẩm</h3>
+                        <span class="admin-card-count">{{ $product->colors->count() }} màu</span>
+                    </div>
+                    <div class="admin-colors-list">
+                        @foreach ($product->colors as $color)
+                            <div class="admin-color-item">
+                                <span class="admin-color-swatch" style="background-color: {{ $color->hex_code }};"></span>
+                                <div class="admin-color-info">
+                                    <span class="admin-color-name">{{ $color->name }}</span>
+                                    <span class="admin-color-code">{{ $color->hex_code }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Sidebar -->
@@ -192,6 +212,81 @@
     color: #333;
 }
 
+.admin-card-colors {
+    border: 1px solid #e5e7eb;
+}
+
+.admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.admin-card-header h3 {
+    margin: 0;
+}
+
+.admin-card-count {
+    font-size: 12px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.admin-colors-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.admin-color-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.admin-color-item:hover {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.admin-color-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.admin-color-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.admin-color-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-color-code {
+    font-size: 11px;
+    color: #6b7280;
+    font-family: monospace;
+}
+
 .admin-card-danger {
     border-left: 4px solid #d32f2f;
 }
@@ -270,6 +365,29 @@
     display: block;
     margin-bottom: 8px;
     color: #333;
+}
+
+.admin-colors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.color-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: #f5f5f5;
+}
+
+.color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .admin-info-row {
@@ -382,6 +500,12 @@
 
     .admin-details-sidebar {
         order: -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-colors-list {
+        grid-template-columns: 1fr;
     }
 }
 </style>

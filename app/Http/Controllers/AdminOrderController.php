@@ -48,7 +48,11 @@ class AdminOrderController extends Controller
 
         $orders = Order::query()
             ->withCount('items')
-            ->with('items:id,order_id,product_image,product_name')
+            ->with([
+                'items:id,order_id,product_id,product_image,product_name,custom_color',
+                'items.product:id,name,sku',
+                'items.product.colors:id,product_id,name,hex_code',
+            ])
             ->when($validated['search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->where('order_number', 'like', "%{$search}%")
@@ -115,7 +119,11 @@ class AdminOrderController extends Controller
         }
 
         return view('admin.orders.show', [
-            'order' => $order->load('items:id,order_id,product_name,product_sku,product_image,unit_price,quantity,line_total'),
+            'order' => $order->load([
+                'items:id,order_id,product_id,product_name,product_sku,product_image,unit_price,quantity,line_total,custom_text,custom_image_path,custom_color',
+                'items.product:id,name,sku',
+                'items.product.colors:id,product_id,name,hex_code',
+            ]),
             'statusLabels' => self::STATUS_LABELS,
             'paymentMethodLabel' => match ($order->payment_method) {
                 Order::PAYMENT_METHOD_COD => 'Thanh toán khi nhận hàng (COD)',
